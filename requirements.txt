@@ -8,11 +8,8 @@ opencv-python==4.8.1.78
 Pillow==10.1.0
 numpy==1.24.3
 
-# CSV and file handling (built-in modules)
-# csv - built-in
-# os - built-in
-# uuid - built-in
-# re - built-in
+# Excel file handling
+openpyxl==3.1.5
 
 # Development dependencies (optional)
 python-dotenv==1.0.0

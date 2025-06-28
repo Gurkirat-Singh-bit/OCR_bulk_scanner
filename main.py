@@ -7,4 +7,4 @@ app = create_app()  # Create Flask app instance using factory pattern
 # 21-30: Running the server
 if __name__ == '__main__':
     # Run the Flask development server with debug mode enabled
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    app.run(debug=True, host='0.0.0.0', port=5002)

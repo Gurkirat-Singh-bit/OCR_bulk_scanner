@@ -3,6 +3,7 @@ import pytesseract  # Tesseract OCR library for text extraction
 import cv2  # OpenCV for image processing
 import re  # Regular expressions for pattern matching
 import numpy as np  # NumPy for array operations
+import os  # OS module for file operations
 from PIL import Image  # PIL for image handling
 
 # 11-20: OCR configuration
@@ -36,22 +37,47 @@ def extract_text_from_image(image_path):
     41-60: Extract raw text from image using Tesseract OCR
     """
     try:
-        # Preprocess image for better OCR results
-        processed_image = preprocess_image(image_path)
+        print(f"🔍 Starting OCR processing for: {image_path}")
         
-        # Convert OpenCV image to PIL Image for Tesseract
-        pil_image = Image.fromarray(processed_image)
+        # Check if file exists
+        if not os.path.exists(image_path):
+            print(f"❌ File not found: {image_path}")
+            return ""
         
-        # Configure Tesseract OCR settings for better accuracy
-        custom_config = r'--oem 3 --psm 6 -c tessedit_char_whitelist=0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz@.-+()[] '
-        
-        # Extract text using Tesseract
-        extracted_text = pytesseract.image_to_string(pil_image, config=custom_config)
-        
-        return extracted_text.strip()  # Return cleaned extracted text
+        # Try direct PIL approach first (simpler and often more reliable)
+        try:
+            print("📖 Reading image with PIL...")
+            pil_image = Image.open(image_path)
+            print(f"✅ Image loaded successfully: {pil_image.size} pixels, mode: {pil_image.mode}")
+            
+            # Extract text using Tesseract with optimized config
+            print("🔤 Extracting text with Tesseract...")
+            extracted_text = pytesseract.image_to_string(pil_image, lang='eng')
+            
+            print(f"📝 Raw extracted text length: {len(extracted_text)} characters")
+            if extracted_text.strip():
+                print(f"✅ OCR successful! Preview: {extracted_text[:100]}...")
+            else:
+                print("⚠️ No text extracted from image")
+            
+            return extracted_text.strip()
+            
+        except Exception as pil_error:
+            print(f"⚠️ PIL approach failed: {pil_error}, trying OpenCV preprocessing...")
+            
+            # Fallback to preprocessed image approach
+            processed_image = preprocess_image(image_path)
+            pil_image = Image.fromarray(processed_image)
+            
+            # Configure Tesseract OCR settings for better accuracy
+            custom_config = r'--oem 3 --psm 6'
+            extracted_text = pytesseract.image_to_string(pil_image, config=custom_config)
+            
+            print(f"📝 Preprocessed OCR text length: {len(extracted_text)} characters")
+            return extracted_text.strip()
         
     except Exception as e:
-        print(f"Error during OCR processing: {str(e)}")
+        print(f"❌ Error during OCR processing: {str(e)}")
         return ""  # Return empty string if OCR fails
 
 def extract_data(text):

@@ -1,11 +1,11 @@
 # 1-10: Importing modules
 import os  # OS module for file operations
-import csv  # CSV module for file handling
+from openpyxl import Workbook, load_workbook  # Excel file handling
 from werkzeug.utils import secure_filename  # Secure filename utility
 import uuid  # UUID for generating unique filenames
 
 # 11-20: File validation configuration
-ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'bmp', 'tiff', 'webp'}  # Supported image formats
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'webp'}  # Supported image formats only
 
 def allowed_file(filename):
     """
@@ -37,41 +37,59 @@ def save_uploaded_file(file, upload_folder):
     
     return None  # Return None if file is invalid
 
-def save_to_csv(data_list, csv_filename='output.csv'):
+def save_to_excel(data_list, excel_filename='output.xlsx'):
     """
-    51-80: Save extracted data to CSV file
+    51-80: Save extracted data to Excel file (append mode)
     """
-    # Define CSV headers
-    fieldnames = ['name', 'email', 'phone', 'company']
+    print(f"💾 Saving {len(data_list)} records to Excel...")
     
-    # Check if CSV file exists
-    file_exists = os.path.isfile(csv_filename)
+    # Get absolute path for Excel file (save in project root)
+    if not os.path.isabs(excel_filename):
+        project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        excel_filename = os.path.join(project_root, excel_filename)
+    
+    print(f"📁 Excel file path: {excel_filename}")
     
     try:
-        # Open CSV file in append mode
-        with open(csv_filename, 'a', newline='', encoding='utf-8') as csvfile:
-            writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+        # Check if Excel file exists
+        if os.path.exists(excel_filename):
+            print("📖 Loading existing Excel file...")
+            workbook = load_workbook(excel_filename)
+            worksheet = workbook.active
+        else:
+            print("📝 Creating new Excel file...")
+            workbook = Workbook()
+            worksheet = workbook.active
             
-            # Write headers if file is new
-            if not file_exists:
-                writer.writeheader()
-            
-            # Write data rows
-            for data in data_list:
-                # Ensure all required fields exist
-                row_data = {
-                    'name': data.get('name', ''),
-                    'email': data.get('email', ''),
-                    'phone': data.get('phone', ''),
-                    'company': data.get('company', '')
-                }
-                writer.writerow(row_data)
+            # Add headers for new file
+            headers = ['Name', 'Email', 'Phone', 'Company', 'Filename']
+            worksheet.append(headers)
+            print("✅ Headers added to new Excel file")
         
-        return True  # Return True if save successful
+        # Append new data rows
+        rows_added = 0
+        for data in data_list:
+            row_data = [
+                data.get('name', ''),
+                data.get('email', ''),
+                data.get('phone', ''),
+                data.get('company', ''),
+                data.get('filename', '')
+            ]
+            worksheet.append(row_data)
+            rows_added += 1
+            print(f"✅ Added row {rows_added}: {data.get('name', 'Unknown')}")
+        
+        # Save workbook
+        workbook.save(excel_filename)
+        workbook.close()
+        
+        print(f"💾 Successfully saved {rows_added} rows to {excel_filename}")
+        return True
         
     except Exception as e:
-        print(f"Error saving to CSV: {str(e)}")
-        return False  # Return False if save failed
+        print(f"❌ Error saving to Excel: {str(e)}")
+        return False
 
 def cleanup_temp_files(file_paths):
     """

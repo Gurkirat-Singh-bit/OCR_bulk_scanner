@@ -1,1 +1,197 @@
-<!-- File upload UI -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <!-- 1-10: Page meta information and external resources -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Visiting Card OCR Extractor</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <!-- 11-20: Main container with animated background -->
+    <div class="main-container">
+        <!-- Animated background particles -->
+        <div class="bg-particles"></div>
+        
+        <!-- Header section -->
+        <header class="app-header fade-in">
+            <div class="header-content">
+                <h1><i class="fas fa-id-card-clip"></i> Visiting Card OCR</h1>
+                <p class="subtitle">Extract structured data from business cards instantly</p>
+            </div>
+        </header>
+
+        <!-- 21-30: Flash messages section -->
+        <div class="messages-container">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category }} slide-down">
+                            <i class="fas fa-{{ 'check-circle' if category == 'success' else 'exclamation-triangle' if category == 'warning' else 'times-circle' }}"></i>
+                            <span>{{ message }}</span>
+                            <button class="close-btn" onclick="this.parentElement.remove()">&times;</button>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+        </div>
+
+        <!-- 31-60: Main content grid layout -->
+        <main class="main-content">
+            <div class="content-grid">
+                
+                <!-- Upload section (top-left, large) -->
+                <section class="upload-section card-hover">
+                    <div class="section-header">
+                        <h2><i class="fas fa-cloud-upload-alt"></i> Upload Business Cards</h2>
+                    </div>
+                    
+                    <form id="uploadForm" action="{{ url_for('main.upload_files') }}" method="POST" enctype="multipart/form-data">
+                        <!-- Drag and drop zone -->
+                        <div class="dropzone" id="dropzone">
+                            <div class="dropzone-content">
+                                <div class="upload-icon">
+                                    <i class="fas fa-cloud-upload-alt"></i>
+                                </div>
+                                <h3>Drag & Drop Your Cards Here</h3>
+                                <p>or click to browse files</p>
+                                <div class="supported-formats">
+                                    <span>PNG, JPG, JPEG, WEBP up to 16MB</span>
+                                </div>
+                                <button type="button" class="browse-btn" id="browseBtn">
+                                    <i class="fas fa-folder-open"></i> Browse Files
+                                </button>
+                            </div>
+                            <input type="file" id="fileInput" name="files" multiple accept=".png,.jpg,.jpeg,.webp" style="display: none;">
+                        </div>
+
+                        <!-- File preview section -->
+                        <div class="file-preview" id="filePreview" style="display: none;">
+                            <div class="preview-header">
+                                <h4><i class="fas fa-images"></i> Selected Files</h4>
+                                <span class="file-count" id="fileCount">0 files</span>
+                            </div>
+                            <div class="preview-grid" id="previewGrid"></div>
+                            <div class="upload-actions">
+                                <button type="button" class="clear-btn" id="clearBtn">
+                                    <i class="fas fa-trash"></i> Clear All
+                                </button>
+                                <button type="submit" class="submit-btn" id="submitBtn">
+                                    <i class="fas fa-magic"></i> Extract Data
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </section>
+
+                <!-- How it works section (top-right) -->
+                <section class="info-section card-hover">
+                    <div class="section-header">
+                        <h2><i class="fas fa-lightbulb"></i> How It Works</h2>
+                    </div>
+                    <div class="info-content">
+                        <div class="info-step">
+                            <div class="step-number">1</div>
+                            <div class="step-content">
+                                <h4>Upload Cards</h4>
+                                <p>Drag and drop or select multiple business card images</p>
+                            </div>
+                        </div>
+                        <div class="info-step">
+                            <div class="step-number">2</div>
+                            <div class="step-content">
+                                <h4>AI Processing</h4>
+                                <p>Advanced OCR extracts names, emails, phones, and companies</p>
+                            </div>
+                        </div>
+                        <div class="info-step">
+                            <div class="step-number">3</div>
+                            <div class="step-content">
+                                <h4>Excel Export</h4>
+                                <p>Structured data is automatically saved to output.xlsx</p>
+                            </div>
+                        </div>
+                        <div class="feature-badges">
+                            <span class="badge"><i class="fas fa-bolt"></i> Fast</span>
+                            <span class="badge"><i class="fas fa-shield-alt"></i> Secure</span>
+                            <span class="badge"><i class="fas fa-download"></i> Exportable</span>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Previous results section (bottom-left) -->
+                <section class="results-section card-hover">
+                    <div class="section-header">
+                        <h2><i class="fas fa-history"></i> Recent Extractions</h2>
+                        <a href="{{ url_for('main.view_results') }}" class="view-all-btn">
+                            <i class="fas fa-external-link-alt"></i> View All
+                        </a>
+                    </div>
+                    <div class="results-content" id="recentResults">
+                        <div class="loading-placeholder">
+                            <i class="fas fa-spinner fa-spin"></i>
+                            <p>Loading recent results...</p>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Footer/Portfolio section (bottom-right) -->
+                <section class="portfolio-section card-hover">
+                    <div class="portfolio-content">
+                        <div class="logo-section">
+                            <div class="logo-placeholder">
+                                <i class="fas fa-code"></i>
+                                <span>YourLogo</span>
+                            </div>
+                        </div>
+                        <div class="portfolio-info">
+                            <h3>Built with ❤️</h3>
+                            <p>Powered by Flask, Tesseract OCR, and modern web technologies</p>
+                        </div>
+                        <div class="portfolio-actions">
+                            <a href="#" target="_blank" class="portfolio-btn" id="portfolioBtn">
+                                <i class="fas fa-external-link-alt"></i> Visit Portfolio
+                            </a>
+                            <a href="https://github.com" target="_blank" class="social-btn">
+                                <i class="fab fa-github"></i>
+                            </a>
+                            <a href="https://linkedin.com" target="_blank" class="social-btn">
+                                <i class="fab fa-linkedin"></i>
+                            </a>
+                        </div>
+                    </div>
+                </section>
+
+            </div>
+        </main>
+    </div>
+
+    <!-- 61-70: Loading overlay -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="loading-spinner">
+            <div class="spinner"></div>
+            <h3>Processing Your Cards...</h3>
+            <p>Extracting contact information using AI</p>
+            <div class="loading-progress">
+                <div class="progress-bar" id="progressBar"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 71-80: Success toast -->
+    <div class="toast" id="successToast">
+        <i class="fas fa-check-circle"></i>
+        <span>Data extracted successfully!</span>
+    </div>
+
+    <!-- Custom JavaScript -->
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</body>
+</html>
