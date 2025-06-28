@@ -39,52 +39,88 @@ def save_uploaded_file(file, upload_folder):
 
 def save_to_excel(data_list, excel_filename='output.xlsx'):
     """
-    51-80: Save extracted data to Excel file (append mode)
+    51-80: Save extracted data to Excel file (append mode with duplicate checking)
     """
     print(f"💾 Saving {len(data_list)} records to Excel...")
     
-    # Get absolute path for Excel file (save in project root)
+    # Get absolute path for Excel file (save in static/results/)
     if not os.path.isabs(excel_filename):
         project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-        excel_filename = os.path.join(project_root, excel_filename)
+        excel_filename = os.path.join(project_root, 'static', 'results', excel_filename)
     
     print(f"📁 Excel file path: {excel_filename}")
     
     try:
+        existing_data = []
+        
         # Check if Excel file exists
         if os.path.exists(excel_filename):
             print("📖 Loading existing Excel file...")
             workbook = load_workbook(excel_filename)
             worksheet = workbook.active
+            
+            # Read existing data to check for duplicates
+            for row in worksheet.iter_rows(min_row=2, values_only=True):
+                if any(row):  # Skip empty rows
+                    existing_data.append({
+                        'name': row[0] or '',
+                        'phone': row[1] or '',
+                        'email': row[2] or '',
+                        'company': row[3] or '',
+                        'website': row[4] or '',
+                        'address': row[5] or '' if len(row) > 5 else '',
+                        'filename': row[6] or '' if len(row) > 6 else ''
+                    })
         else:
             print("📝 Creating new Excel file...")
             workbook = Workbook()
             worksheet = workbook.active
             
-            # Add headers for new file
-            headers = ['Name', 'Email', 'Phone', 'Company', 'Filename']
+            # Add comprehensive headers for new file
+            headers = ['Name', 'Phone', 'Email', 'Company', 'Website', 'Address', 'Filename']
             worksheet.append(headers)
             print("✅ Headers added to new Excel file")
         
-        # Append new data rows
+        # Append new data rows (skip duplicates)
         rows_added = 0
+        skipped_duplicates = 0
+        
         for data in data_list:
-            row_data = [
-                data.get('name', ''),
-                data.get('email', ''),
-                data.get('phone', ''),
-                data.get('company', ''),
-                data.get('filename', '')
-            ]
-            worksheet.append(row_data)
-            rows_added += 1
-            print(f"✅ Added row {rows_added}: {data.get('name', 'Unknown')}")
+            # Check for duplicates based on name and phone/email
+            is_duplicate = False
+            for existing in existing_data:
+                if (data.get('name', '').lower() == existing['name'].lower() and 
+                    (data.get('phone', '') == existing['phone'] or 
+                     data.get('email', '').lower() == existing['email'].lower()) and
+                    existing['name']):  # Only if existing name is not empty
+                    is_duplicate = True
+                    break
+            
+            if not is_duplicate:
+                row_data = [
+                    data.get('name', ''),
+                    data.get('phone', ''),
+                    data.get('email', ''),
+                    data.get('company', ''),
+                    data.get('website', ''),
+                    data.get('address', ''),
+                    data.get('filename', '')
+                ]
+                worksheet.append(row_data)
+                rows_added += 1
+                print(f"✅ Added row {rows_added}: {data.get('name', 'Unknown')}")
+            else:
+                skipped_duplicates += 1
+                print(f"⚠️ Skipped duplicate: {data.get('name', 'Unknown')}")
         
         # Save workbook
         workbook.save(excel_filename)
         workbook.close()
         
-        print(f"💾 Successfully saved {rows_added} rows to {excel_filename}")
+        if skipped_duplicates > 0:
+            print(f"💾 Successfully saved {rows_added} new rows, skipped {skipped_duplicates} duplicates")
+        else:
+            print(f"💾 Successfully saved {rows_added} rows to {excel_filename}")
         return True
         
     except Exception as e:

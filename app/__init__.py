@@ -19,13 +19,15 @@ def create_app():
                 template_folder=os.path.join(project_root, 'templates'),
                 static_folder=os.path.join(project_root, 'static'))
     
-    # 21-30: Configuring Flask app settings
+    # 21-30: Configuring Flask app settings (removed file size limits for bulk processing)
     app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'ocr-scanner-secret-key-2025')  # Secret key for sessions and CSRF protection
     app.config['UPLOAD_FOLDER'] = os.path.join(project_root, 'static', 'uploads')  # Absolute path to upload directory
-    app.config['MAX_CONTENT_LENGTH'] = int(os.getenv('MAX_CONTENT_LENGTH', 16 * 1024 * 1024))  # Limit file uploads to 16MB
+    app.config['RESULTS_FOLDER'] = os.path.join(project_root, 'static', 'results')  # Absolute path to results directory
+    # Removed MAX_CONTENT_LENGTH to allow bulk upload of many files
     
-    # 31-40: Creating upload directory if it doesn't exist
+    # 31-40: Creating required directories if they don't exist
     os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)  # Create uploads directory with absolute path
+    os.makedirs(app.config['RESULTS_FOLDER'], exist_ok=True)  # Create results directory with absolute path
     
     # 41-50: Registering blueprints
     from app.routes import main_bp  # Import main blueprint from routes

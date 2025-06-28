@@ -63,7 +63,7 @@
                                 <h3>Drag & Drop Your Cards Here</h3>
                                 <p>or click to browse files</p>
                                 <div class="supported-formats">
-                                    <span>PNG, JPG, JPEG, WEBP up to 16MB</span>
+                                    <span>PNG, JPG, JPEG, WEBP (unlimited size & quantity)</span>
                                 </div>
                                 <button type="button" class="browse-btn" id="browseBtn">
                                     <i class="fas fa-folder-open"></i> Browse Files
@@ -135,10 +135,46 @@
                         </a>
                     </div>
                     <div class="results-content" id="recentResults">
-                        <div class="loading-placeholder">
-                            <i class="fas fa-spinner fa-spin"></i>
-                            <p>Loading recent results...</p>
-                        </div>
+                        {% if recent_extractions %}
+                            <div class="recent-table">
+                                {% for extraction in recent_extractions %}
+                                <div class="recent-item" data-index="{{ loop.index0 }}">
+                                    <div class="recent-item-header">
+                                        <h4>{{ extraction.name or 'Unknown Name' }}</h4>
+                                        <span class="recent-badge">{{ extraction.filename or 'N/A' }}</span>
+                                    </div>
+                                    <div class="recent-item-details">
+                                        {% if extraction.company %}
+                                        <p><i class="fas fa-building"></i> {{ extraction.company }}</p>
+                                        {% endif %}
+                                        {% if extraction.email %}
+                                        <p><i class="fas fa-envelope"></i> {{ extraction.email }}</p>
+                                        {% endif %}
+                                        {% if extraction.phone %}
+                                        <p><i class="fas fa-phone"></i> {{ extraction.phone }}</p>
+                                        {% endif %}
+                                        {% if extraction.website %}
+                                        <p><i class="fas fa-globe"></i> {{ extraction.website }}</p>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            <div class="no-results">
+                                <i class="fas fa-inbox"></i>
+                                <h4>No extractions yet</h4>
+                                <p>Upload some business cards to see results here</p>
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <!-- Download section -->
+                    <div class="download-section">
+                        <a href="{{ url_for('main.download_excel') }}" class="download-btn" id="downloadBtn">
+                            <i class="fas fa-download"></i> Download Excel File
+                        </a>
+                        <p class="download-info">Get all extracted data as Excel file</p>
                     </div>
                 </section>
 
@@ -173,14 +209,17 @@
         </main>
     </div>
 
-    <!-- 61-70: Loading overlay -->
+    <!-- 61-70: Enhanced loading overlay for bulk processing -->
     <div class="loading-overlay" id="loadingOverlay">
         <div class="loading-spinner">
             <div class="spinner"></div>
-            <h3>Processing Your Cards...</h3>
-            <p>Extracting contact information using AI</p>
+            <h3 id="loadingTitle">Processing Your Cards...</h3>
+            <p id="loadingSubtitle">Extracting contact information using AI</p>
             <div class="loading-progress">
                 <div class="progress-bar" id="progressBar"></div>
+            </div>
+            <div class="processing-stats" id="processingStats" style="display: none;">
+                <span id="currentFile">Processing file 1 of 10</span>
             </div>
         </div>
     </div>

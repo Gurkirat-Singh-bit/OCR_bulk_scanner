@@ -15,12 +15,11 @@ document.addEventListener('DOMContentLoaded', function() {
     const successToast = document.getElementById('successToast');
     const recentResults = document.getElementById('recentResults');
 
-    // 11-20: Application state and configuration
+    // 11-20: Application state and configuration (removed limits for bulk processing)
     let selectedFiles = [];
     let uploadInProgress = false;
-    const maxFileSize = 16 * 1024 * 1024; // 16MB
     const allowedTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/webp'];  // Updated to match backend
-    const maxFiles = 10; // Maximum number of files
+    // Removed maxFileSize and maxFiles limits for bulk processing
 
     // Initialize app
     initializeApp();
@@ -116,11 +115,6 @@ document.addEventListener('DOMContentLoaded', function() {
         let validFiles = 0;
 
         fileArray.forEach(file => {
-            if (selectedFiles.length >= maxFiles) {
-                showNotification(`Maximum ${maxFiles} files allowed`, 'warning');
-                return;
-            }
-
             if (!validateFile(file)) return;
 
             selectedFiles.push({
@@ -137,17 +131,11 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    // 81-100: File validation
+    // 81-100: File validation (removed size limits for bulk processing)
     function validateFile(file) {
         // Check file type
         if (!allowedTypes.includes(file.type)) {
             showNotification(`${file.name}: Unsupported file format. Please upload PNG, JPG, JPEG, or WEBP only.`, 'error');
-            return false;
-        }
-
-        // Check file size
-        if (file.size > maxFileSize) {
-            showNotification(`${file.name}: File too large (max 16MB)`, 'error');
             return false;
         }
 
@@ -235,7 +223,7 @@ document.addEventListener('DOMContentLoaded', function() {
         showNotification('All files cleared', 'info');
     }
 
-    // 141-180: Form submission and upload handling
+    // 141-180: Enhanced form submission with bulk processing support
     function handleFormSubmit(e) {
         e.preventDefault();
 
@@ -249,8 +237,12 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
 
+        const fileCount = selectedFiles.length;
         uploadInProgress = true;
+        
+        // Show enhanced loading with file count
         showLoadingOverlay();
+        updateLoadingMessage(`Processing ${fileCount} file${fileCount !== 1 ? 's' : ''}...`);
         animateProgressBar();
 
         const formData = new FormData();
@@ -258,10 +250,17 @@ document.addEventListener('DOMContentLoaded', function() {
             formData.append('files', fileObj.file);
         });
 
-        // Simulate processing delay for better UX
-        setTimeout(() => {
-            submitFormData(formData);
-        }, 1000);
+        console.log(`🚀 Starting bulk upload of ${fileCount} files`);
+
+        // Start immediate upload for bulk processing
+        submitFormData(formData);
+    }
+
+    function updateLoadingMessage(message) {
+        const loadingElement = document.querySelector('.loading-spinner h3');
+        if (loadingElement) {
+            loadingElement.textContent = message;
+        }
     }
 
     function submitFormData(formData) {
@@ -383,9 +382,11 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // 221-240: Recent results loading
+    // 221-240: Recent results loading with proper API integration
     function loadRecentResults() {
         if (!recentResults) return;
+
+        console.log('🔄 Loading recent extractions...');
 
         // Show loading state
         recentResults.innerHTML = `
@@ -395,23 +396,26 @@ document.addEventListener('DOMContentLoaded', function() {
             </div>
         `;
 
-        // Simulate API call to get recent results
-        setTimeout(() => {
-            fetch('/api/recent-results')
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error('Failed to load results');
-                    }
-                    return response.json();
-                })
-                .then(data => {
-                    displayRecentResults(data);
-                })
-                .catch(error => {
-                    console.error('Error loading recent results:', error);
-                    displayNoResults();
-                });
-        }, 1000);
+        // Fetch recent results from API
+        fetch('/api/recent')
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Failed to load results');
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log('✅ Recent extractions loaded:', data);
+                if (data.success) {
+                    displayRecentResults(data.data);
+                } else {
+                    throw new Error(data.error || 'Unknown error');
+                }
+            })
+            .catch(error => {
+                console.error('❌ Error loading recent results:', error);
+                displayNoResults();
+            });
     }
 
     function displayRecentResults(results) {
@@ -420,35 +424,36 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
 
-        const tableHTML = `
-            <table class="results-table">
-                <thead>
-                    <tr>
-                        <th>Name</th>
-                        <th>Email</th>
-                        <th>Company</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    ${results.slice(0, 5).map(result => `
-                        <tr>
-                            <td>${result.name || 'N/A'}</td>
-                            <td>${result.email || 'N/A'}</td>
-                            <td>${result.company || 'N/A'}</td>
-                        </tr>
-                    `).join('')}
-                </tbody>
-            </table>
-        `;
+        console.log(`📊 Displaying ${results.length} recent extractions`);
 
-        recentResults.innerHTML = tableHTML;
+        let html = '<div class="recent-table">';
+        results.forEach((extraction, index) => {
+            html += `
+                <div class="recent-item" data-index="${index}">
+                    <div class="recent-item-header">
+                        <h4>${extraction.name || 'Unknown Name'}</h4>
+                        <span class="recent-badge">${extraction.filename || 'N/A'}</span>
+                    </div>
+                    <div class="recent-item-details">
+                        ${extraction.company ? `<p><i class="fas fa-building"></i> ${extraction.company}</p>` : ''}
+                        ${extraction.email ? `<p><i class="fas fa-envelope"></i> ${extraction.email}</p>` : ''}
+                        ${extraction.phone ? `<p><i class="fas fa-phone"></i> ${extraction.phone}</p>` : ''}
+                        ${extraction.website ? `<p><i class="fas fa-globe"></i> ${extraction.website}</p>` : ''}
+                    </div>
+                </div>
+            `;
+        });
+        html += '</div>';
+
+        recentResults.innerHTML = html;
     }
 
     function displayNoResults() {
         recentResults.innerHTML = `
-            <div class="loading-placeholder">
+            <div class="no-results">
                 <i class="fas fa-inbox"></i>
-                <p>No results yet. Upload some cards to get started!</p>
+                <h4>No extractions yet</h4>
+                <p>Upload some business cards to see results here</p>
             </div>
         `;
     }
@@ -568,8 +573,8 @@ document.addEventListener('DOMContentLoaded', function() {
     // Initialize success
     console.log('🚀 Visiting Card OCR App initialized successfully!');
     console.log('📝 Supported formats:', allowedTypes.join(', '));
-    console.log('📊 Max files:', maxFiles);
-    console.log('💾 Max file size:', formatFileSize(maxFileSize));
+    // Debug info (removed file limits for bulk processing)
+    console.log('🎯 Bulk processing enabled - no file limits');
 
     function formatFileSize(bytes) {
         if (bytes === 0) return '0 Bytes';
