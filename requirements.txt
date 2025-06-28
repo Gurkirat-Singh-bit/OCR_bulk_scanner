@@ -1,0 +1,18 @@
+# Flask and web framework dependencies
+Flask==3.0.0
+Werkzeug==3.0.1
+
+# OCR and image processing dependencies
+pytesseract==0.3.10
+opencv-python==4.8.1.78
+Pillow==10.1.0
+numpy==1.24.3
+
+# CSV and file handling (built-in modules)
+# csv - built-in
+# os - built-in
+# uuid - built-in
+# re - built-in
+
+# Development dependencies (optional)
+python-dotenv==1.0.0

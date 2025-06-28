@@ -1,7 +1,15 @@
 [project]
 name = "ocr-scanner-script"
 version = "0.1.0"
-description = "Add your description here"
+description = "Flask web application for OCR-based visiting card data extraction"
 readme = "README.md"
 requires-python = ">=3.12"
-dependencies = []
+dependencies = [
+    "Flask>=3.0.0",
+    "Werkzeug>=3.0.1",
+    "pytesseract>=0.3.10",
+    "opencv-python>=4.8.1.78",
+    "Pillow>=10.1.0",
+    "numpy>=1.24.3",
+    "python-dotenv>=1.0.0"
+]
