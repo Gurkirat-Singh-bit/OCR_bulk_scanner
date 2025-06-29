@@ -2084,33 +2084,303 @@ function deletePreviewCard() {
     });
 }
 
-// Backup direct event handlers for Edit and Delete buttons
-function setupDirectEditDeleteHandlers() {
-    console.log('🔧 Setting up direct Edit and Delete button handlers...');
+// View Mode and Approval Status Management
+let currentViewMode = 'normal';
+
+// Initialize view mode functionality
+function initializeViewMode() {
+    console.log('🔄 Initializing view mode functionality');
     
-    // Handle Edit buttons
-    document.querySelectorAll('.edit-card-btn').forEach((btn, index) => {
-        btn.addEventListener('click', function(e) {
+    // Set default view mode
+    const manageContent = document.querySelector('.manage-content');
+    if (manageContent) {
+        manageContent.classList.add('normal-view');
+    }
+    
+    // Add event listeners for view toggle buttons
+    const normalViewBtn = document.getElementById('normalViewBtn');
+    const reviewerViewBtn = document.getElementById('reviewerViewBtn');
+    
+    if (normalViewBtn) {
+        normalViewBtn.addEventListener('click', () => switchViewMode('normal'));
+    }
+    
+    if (reviewerViewBtn) {
+        reviewerViewBtn.addEventListener('click', () => switchViewMode('reviewer'));
+    }
+}
+
+// Switch between normal and reviewer view modes
+function switchViewMode(mode) {
+    console.log(`🔄 Switching to ${mode} view mode`);
+    
+    currentViewMode = mode;
+    const manageContent = document.querySelector('.manage-content');
+    const normalBtn = document.getElementById('normalViewBtn');
+    const reviewerBtn = document.getElementById('reviewerViewBtn');
+    
+    if (!manageContent || !normalBtn || !reviewerBtn) return;
+    
+    // Update CSS classes
+    manageContent.classList.remove('normal-view', 'reviewer-view');
+    manageContent.classList.add(`${mode}-view`);
+    
+    // Update button states
+    normalBtn.classList.toggle('active', mode === 'normal');
+    reviewerBtn.classList.toggle('active', mode === 'reviewer');
+    
+    showToast(`Switched to ${mode} view`, 'success');
+}
+
+// Initialize approval status functionality
+function initializeApprovalStatus() {
+    console.log('✅ Initializing approval status functionality');
+    
+    // Add click event listeners to all status indicators
+    document.addEventListener('click', function(e) {
+        const statusIndicator = e.target.closest('.status-indicator');
+        if (statusIndicator) {
             e.preventDefault();
             e.stopPropagation();
-            e.stopImmediatePropagation();
-            console.log(`🔥 DIRECT EDIT BUTTON ${index} CLICKED!`);
-            handleEditCard(this);
-        }, true);
-        console.log(`✅ Added direct handler to edit button ${index}`);
+            handleStatusIndicatorClick(statusIndicator);
+        }
     });
     
-    // Handle Delete buttons  
-    document.querySelectorAll('.delete-card-btn').forEach((btn, index) => {
-        btn.addEventListener('click', function(e) {
-            e.preventDefault();
-            e.stopPropagation();
-            e.stopImmediatePropagation();
-            console.log(`🔥 DIRECT DELETE BUTTON ${index} CLICKED!`);
-            handleDeleteCard(this);
-        }, true);
-        console.log(`✅ Added direct handler to delete button ${index}`);
+    // Load saved approval statuses
+    loadAllApprovalStatuses();
+}
+
+// Handle status indicator click
+function handleStatusIndicatorClick(indicator) {
+    const cardId = indicator.closest('.card-approval-status').dataset.cardId;
+    const currentStatus = indicator.dataset.status;
+    
+    console.log(`🎯 Status indicator clicked for card ${cardId}, current status: ${currentStatus}`);
+    
+    // Cycle through statuses: pending -> approved -> rejected -> issue -> pending
+    const statusCycle = ['pending', 'approved', 'rejected', 'issue'];
+    const currentIndex = statusCycle.indexOf(currentStatus);
+    const newStatus = statusCycle[(currentIndex + 1) % statusCycle.length];
+    
+    updateCardApprovalStatus(cardId, newStatus);
+}
+
+// Update card approval status
+function updateCardApprovalStatus(cardId, status) {
+    console.log(`✅ Updating card ${cardId} approval status to: ${status}`);
+    
+    // Update all status indicators for this card
+    const indicators = document.querySelectorAll(`[data-card-id="${cardId}"] .status-indicator`);
+    indicators.forEach(indicator => {
+        indicator.dataset.status = status;
     });
+    
+    // Save status locally
+    saveApprovalStatusLocally(cardId, status);
+    
+    const statusText = {
+        'approved': 'Approved',
+        'rejected': 'Rejected', 
+        'issue': 'Marked as having issues',
+        'pending': 'Set to pending review'
+    };
+    
+    showToast(`Card ${statusText[status]}`, 'success');
+}
+
+// Save approval status to localStorage
+function saveApprovalStatusLocally(cardId, status) {
+    const approvalData = JSON.parse(localStorage.getItem('cardApprovalStatus') || '{}');
+    approvalData[cardId] = status;
+    localStorage.setItem('cardApprovalStatus', JSON.stringify(approvalData));
+}
+
+// Load approval status from localStorage
+function loadApprovalStatusLocally(cardId) {
+    const approvalData = JSON.parse(localStorage.getItem('cardApprovalStatus') || '{}');
+    return approvalData[cardId] || 'pending';
+}
+
+// Load all saved approval statuses
+function loadAllApprovalStatuses() {
+    const cards = document.querySelectorAll('.card-item[data-card-id]');
+    cards.forEach(card => {
+        const cardId = card.dataset.cardId;
+        const savedStatus = loadApprovalStatusLocally(cardId);
+        
+        const indicator = card.querySelector('.status-indicator');
+        if (indicator) {
+            indicator.dataset.status = savedStatus;
+        }
+    });
+}
+
+// Initialize on DOM load
+document.addEventListener('DOMContentLoaded', function() {
+    // Add delay to ensure other initialization is complete
+    setTimeout(() => {
+        initializeViewMode();
+        initializeApprovalStatus();
+    }, 200);
+});
+
+// Make functions globally available
+window.initializeViewMode = initializeViewMode;
+window.switchViewMode = switchViewMode;
+window.updateCardApprovalStatus = updateCardApprovalStatus;
+
+// Add keyboard support for image modal
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        const imageModal = document.getElementById('imageModal');
+        if (imageModal && imageModal.classList.contains('show')) {
+            closeImageModal();
+        }
+    }
+});
+
+// Image Modal Functions
+function openImageModal() {
+    const previewImage = document.getElementById('previewImage');
+    const previewFilename = document.getElementById('previewFilename');
+    const modalImage = document.getElementById('modalImage');
+    const modalFilename = document.getElementById('modalImageFilename');
+    const imageModal = document.getElementById('imageModal');
+    
+    if (previewImage && modalImage && imageModal) {
+        modalImage.src = previewImage.src;
+        modalImage.alt = previewImage.alt;
+        
+        if (previewFilename && modalFilename) {
+            modalFilename.textContent = previewFilename.textContent;
+        }
+        
+        imageModal.classList.add('show');
+        
+        // Add click handler to close modal when clicking outside image
+        setTimeout(() => {
+            imageModal.addEventListener('click', function(e) {
+                if (e.target === imageModal) {
+                    closeImageModal();
+                }
+            });
+        }, 100);
+    }
+}
+
+function closeImageModal() {
+    const imageModal = document.getElementById('imageModal');
+    if (imageModal) {
+        imageModal.classList.remove('show');
+    }
+}
+
+// Country Autocomplete Functionality
+function initializeCountryAutocomplete() {
+    const countryInput = document.getElementById('editCountry');
+    const dropdown = document.getElementById('countryDropdown');
+    
+    if (!countryInput || !dropdown) return;
+    
+    let selectedIndex = -1;
+    
+    // Show dropdown on focus
+    countryInput.addEventListener('focus', function() {
+        dropdown.style.display = 'block';
+        populateCountryDropdown();
+    });
+    
+    // Filter countries on input
+    countryInput.addEventListener('input', function() {
+        const searchTerm = this.value.toLowerCase();
+        filterCountries(searchTerm);
+        selectedIndex = -1;
+    });
+    
+    // Handle keyboard navigation
+    countryInput.addEventListener('keydown', function(e) {
+        const options = dropdown.querySelectorAll('.country-option:not([style*="display: none"])');
+        
+        switch(e.key) {
+            case 'ArrowDown':
+                e.preventDefault();
+                selectedIndex = Math.min(selectedIndex + 1, options.length - 1);
+                updateSelection(options);
+                break;
+            case 'ArrowUp':
+                e.preventDefault();
+                selectedIndex = Math.max(selectedIndex - 1, -1);
+                updateSelection(options);
+                break;
+            case 'Enter':
+                e.preventDefault();
+                if (selectedIndex >= 0 && options[selectedIndex]) {
+                    selectCountry(options[selectedIndex]);
+                }
+                break;
+            case 'Escape':
+                dropdown.style.display = 'none';
+                selectedIndex = -1;
+                break;
+        }
+    });
+    
+    // Hide dropdown when clicking outside
+    document.addEventListener('click', function(e) {
+        if (!countryInput.contains(e.target) && !dropdown.contains(e.target)) {
+            dropdown.style.display = 'none';
+            selectedIndex = -1;
+        }
+    });
+}
+
+function populateCountryDropdown() {
+    const dropdown = document.getElementById('countryDropdown');
+    dropdown.innerHTML = '';
+    
+    COUNTRIES.forEach(country => {
+        const option = document.createElement('div');
+        option.className = 'country-option';
+        option.innerHTML = '<span class="country-flag">' + country.flag + '</span><span class="country-name">' + country.name + '</span>';
+        option.addEventListener('click', () => selectCountry(option));
+        dropdown.appendChild(option);
+    });
+}
+
+function filterCountries(searchTerm) {
+    const dropdown = document.getElementById('countryDropdown');
+    const options = dropdown.querySelectorAll('.country-option');
+    
+    options.forEach(option => {
+        const countryName = option.querySelector('.country-name').textContent.toLowerCase();
+        if (countryName.includes(searchTerm)) {
+            option.style.display = 'flex';
+        } else {
+            option.style.display = 'none';
+        }
+    });
+}
+
+function updateSelection(options) {
+    options.forEach((option, index) => {
+        option.classList.toggle('selected', index === selectedIndex);
+    });
+    
+    if (selectedIndex >= 0 && options[selectedIndex]) {
+        options[selectedIndex].scrollIntoView({ block: 'nearest' });
+    }
+}
+
+function selectCountry(option) {
+    const countryInput = document.getElementById('editCountry');
+    const dropdown = document.getElementById('countryDropdown');
+    const countryName = option.querySelector('.country-name').textContent;
+    
+    countryInput.value = countryName;
+    dropdown.style.display = 'none';
+    
+    const flag = option.querySelector('.country-flag').textContent;
+    countryInput.dataset.flag = flag;
 }
 
 // Add this to window for console access
@@ -2443,161 +2713,3 @@ window.addEventListener('unhandledrejection', function(event) {
 });
 
 console.log('🛡️ Global error handlers initialized');
-
-// Image Modal Functions
-function openImageModal() {
-    const previewImage = document.getElementById('previewImage');
-    const previewFilename = document.getElementById('previewFilename');
-    const modalImage = document.getElementById('modalImage');
-    const modalFilename = document.getElementById('modalImageFilename');
-    const imageModal = document.getElementById('imageModal');
-    
-    if (previewImage && modalImage && imageModal) {
-        modalImage.src = previewImage.src;
-        modalImage.alt = previewImage.alt;
-        
-        if (previewFilename && modalFilename) {
-            modalFilename.textContent = previewFilename.textContent;
-        }
-        
-        imageModal.classList.add('show');
-        
-        // Add click handler to close modal when clicking outside image
-        setTimeout(() => {
-            imageModal.addEventListener('click', function(e) {
-                if (e.target === imageModal) {
-                    closeImageModal();
-                }
-            });
-        }, 100);
-    }
-}
-
-function closeImageModal() {
-    const imageModal = document.getElementById('imageModal');
-    if (imageModal) {
-        imageModal.classList.remove('show');
-    }
-}
-
-// Country Autocomplete Functionality
-function initializeCountryAutocomplete() {
-    const countryInput = document.getElementById('editCountry');
-    const dropdown = document.getElementById('countryDropdown');
-    
-    if (!countryInput || !dropdown) return;
-    
-    let selectedIndex = -1;
-    
-    // Show dropdown on focus
-    countryInput.addEventListener('focus', function() {
-        dropdown.style.display = 'block';
-        populateCountryDropdown();
-    });
-    
-    // Filter countries on input
-    countryInput.addEventListener('input', function() {
-        const searchTerm = this.value.toLowerCase();
-        filterCountries(searchTerm);
-        selectedIndex = -1;
-    });
-    
-    // Handle keyboard navigation
-    countryInput.addEventListener('keydown', function(e) {
-        const options = dropdown.querySelectorAll('.country-option:not([style*="display: none"])');
-        
-        switch(e.key) {
-            case 'ArrowDown':
-                e.preventDefault();
-                selectedIndex = Math.min(selectedIndex + 1, options.length - 1);
-                updateSelection(options);
-                break;
-            case 'ArrowUp':
-                e.preventDefault();
-                selectedIndex = Math.max(selectedIndex - 1, -1);
-                updateSelection(options);
-                break;
-            case 'Enter':
-                e.preventDefault();
-                if (selectedIndex >= 0 && options[selectedIndex]) {
-                    selectCountry(options[selectedIndex]);
-                }
-                break;
-            case 'Escape':
-                dropdown.style.display = 'none';
-                selectedIndex = -1;
-                break;
-        }
-    });
-    
-    // Hide dropdown when clicking outside
-    document.addEventListener('click', function(e) {
-        if (!countryInput.contains(e.target) && !dropdown.contains(e.target)) {
-            dropdown.style.display = 'none';
-            selectedIndex = -1;
-        }
-    });
-}
-
-function populateCountryDropdown() {
-    const dropdown = document.getElementById('countryDropdown');
-    dropdown.innerHTML = '';
-    
-    COUNTRIES.forEach(country => {
-        const option = document.createElement('div');
-        option.className = 'country-option';
-        option.innerHTML = '<span class="country-flag">' + country.flag + '</span><span class="country-name">' + country.name + '</span>';
-        option.addEventListener('click', () => selectCountry(option));
-        dropdown.appendChild(option);
-    });
-}
-
-function filterCountries(searchTerm) {
-    const dropdown = document.getElementById('countryDropdown');
-    const options = dropdown.querySelectorAll('.country-option');
-    
-    options.forEach(option => {
-        const countryName = option.querySelector('.country-name').textContent.toLowerCase();
-        if (countryName.includes(searchTerm)) {
-            option.style.display = 'flex';
-        } else {
-            option.style.display = 'none';
-        }
-    });
-}
-
-function updateSelection(options) {
-    options.forEach((option, index) => {
-        option.classList.toggle('selected', index === selectedIndex);
-    });
-    
-    if (selectedIndex >= 0 && options[selectedIndex]) {
-        options[selectedIndex].scrollIntoView({ block: 'nearest' });
-    }
-}
-
-function selectCountry(option) {
-    const countryInput = document.getElementById('editCountry');
-    const dropdown = document.getElementById('countryDropdown');
-    const countryName = option.querySelector('.country-name').textContent;
-    
-    countryInput.value = countryName;
-    dropdown.style.display = 'none';
-    
-    const flag = option.querySelector('.country-flag').textContent;
-    countryInput.dataset.flag = flag;
-}
-
-// Add keyboard support for image modal
-document.addEventListener('keydown', function(e) {
-    if (e.key === 'Escape') {
-        const imageModal = document.getElementById('imageModal');
-        if (imageModal && imageModal.classList.contains('show')) {
-            closeImageModal();
-        }
-    }
-});
-
-// Make functions globally available
-window.openImageModal = openImageModal;
-window.closeImageModal = closeImageModal;

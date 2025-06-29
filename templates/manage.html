@@ -64,6 +64,14 @@
                     <button id="resetFilters" class="reset-filters-btn">
                         <i class="fas fa-undo"></i> Reset
                     </button>
+                    <div class="view-toggle-buttons">
+                        <button class="view-toggle-btn active" id="normalViewBtn" data-view="normal">
+                            <i class="fas fa-eye"></i> Normal View
+                        </button>
+                        <button class="view-toggle-btn" id="reviewerViewBtn" data-view="reviewer">
+                            <i class="fas fa-clipboard-check"></i> Reviewer View
+                        </button>
+                    </div>
                 </div>
             </div>
         </section>
@@ -83,7 +91,7 @@
                                 <span class="card-count" id="unsortedCount">{{ unsorted_cards|length }}</span>
                             </div>
                         </div>
-                        <div class="cards-container" id="unsortedContainer">
+                        <div class="cards-container{% if not unsorted_cards %} empty-container{% endif %}" id="unsortedContainer">
                             {% for card in unsorted_cards %}
                             <div class="card-item" data-card-id="{{ card.id }}" data-card-data='{{ card|tojson }}'>
                                 <div class="card-header">
@@ -123,16 +131,21 @@
                                         <span>Drag to organize</span>
                                     </div>
                                 </div>
+                                <div class="card-approval-status" data-card-id="{{ card.id }}">
+                                    <div class="status-indicator" data-status="{{ card.approval_status or 'pending' }}" title="Click to change status">
+                                        <i class="fas fa-circle"></i>
+                                    </div>
+                                </div>
                             </div>
                             {% endfor %}
+                            {% if not unsorted_cards %}
+                            <div class="empty-state">
+                                <i class="fas fa-check-circle"></i>
+                                <h3>All cards are organized!</h3>
+                                <p>Great job! All your business cards have been sorted into labels.</p>
+                            </div>
+                            {% endif %}
                         </div>
-                        {% if not unsorted_cards %}
-                        <div class="empty-state">
-                            <i class="fas fa-check-circle"></i>
-                            <h3>All cards are organized!</h3>
-                            <p>Great job! All your business cards have been sorted into labels.</p>
-                        </div>
-                        {% endif %}
                     </section>
 
                     <!-- Sorted Data Section -->
@@ -197,6 +210,11 @@
                                             {% if card.designation %}
                                             <p><i class="fas fa-user-tie"></i> {{ card.designation }}</p>
                                             {% endif %}
+                                        </div>
+                                        <div class="card-approval-status" data-card-id="{{ card.id }}">
+                                            <div class="status-indicator" data-status="{{ card.approval_status or 'pending' }}" title="Click to change status">
+                                                <i class="fas fa-circle"></i>
+                                            </div>
                                         </div>
                                     </div>
                                     {% endfor %}
