@@ -240,7 +240,14 @@ def create_label(label_name, color="#0891b2"):
         
         if result.inserted_id:
             print(f"✅ Label '{label_name}' created successfully")
-            return label_data
+            # Return a clean dictionary without ObjectId
+            return {
+                "id": label_data["id"],
+                "name": label_data["name"],
+                "color": label_data["color"],
+                "created_at": label_data["created_at"].isoformat(),
+                "card_count": label_data["card_count"]
+            }
         
         return None
         
