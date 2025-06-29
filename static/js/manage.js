@@ -298,10 +298,13 @@ function setupEventListeners() {
         }
         
         if (e.target.matches('.remove-label-btn, .remove-label-btn *')) {
-            e.preventDefault();
+            // Only handle remove-label buttons in unsorted cards
             const btn = e.target.closest('.remove-label-btn');
-            console.log('🗑️ REMOVE button clicked', btn);
-            handleLabelRemoval(btn);
+            if (btn && !btn.closest('.labeled-card')) {
+                e.preventDefault();
+                console.log('🗑️ REMOVE button clicked', btn);
+                handleLabelRemoval(btn);
+            }
             return;
         }
         
@@ -330,12 +333,15 @@ function setupEventListeners() {
         }
         
         if (e.target.matches('.preview-card-btn, .preview-card-btn *')) {
-            e.preventDefault();
+            // Only handle preview buttons in unsorted cards
             const btn = e.target.closest('.preview-card-btn');
-            console.log('👁️ PREVIEW button clicked', btn);
-            const cardId = btn.dataset.cardId;
-            if (cardId) {
-                openPreview(parseInt(cardId));
+            if (btn && !btn.closest('.labeled-card')) {
+                e.preventDefault();
+                console.log('👁️ PREVIEW button clicked', btn);
+                const cardId = btn.dataset.cardId;
+                if (cardId) {
+                    openPreview(parseInt(cardId));
+                }
             }
             return;
         }
@@ -1435,6 +1441,23 @@ function initializeDragAndDrop() {
             },
             onEnd: function(evt) {
                 evt.item.classList.remove('dragging');
+                
+                // Handle card movement from unsorted to label containers
+                const cardId = evt.item.dataset.cardId;
+                const newContainer = evt.to;
+                const oldContainer = evt.from;
+                
+                // Check if moved from unsorted to a label container
+                if (newContainer !== oldContainer) {
+                    const labelId = newContainer.dataset.labelId;
+                    if (labelId) {
+                        // Card moved from unsorted to a label
+                        handleDraggedLabelAssignment(cardId, labelId, newContainer);
+                    } else if (oldContainer.dataset.labelId && newContainer.id === 'unsortedContainer') {
+                        // Card moved from label back to unsorted
+                        handleRemoveLabelFromCard(cardId);
+                    }
+                }
             }
         });
     }
@@ -1454,11 +1477,19 @@ function initializeDragAndDrop() {
                 // Handle card movement between containers
                 const cardId = evt.item.dataset.cardId;
                 const newContainer = evt.to;
-                const labelId = newContainer.dataset.labelId;
+                const oldContainer = evt.from;
                 
-                if (labelId && evt.from !== evt.to) {
-                    // Card moved to a different label
-                    handleDraggedLabelAssignment(cardId, labelId, newContainer);
+                if (newContainer !== oldContainer) {
+                    const newLabelId = newContainer.dataset.labelId;
+                    const oldLabelId = oldContainer.dataset.labelId;
+                    
+                    if (newLabelId) {
+                        // Card moved to a label container
+                        handleDraggedLabelAssignment(cardId, newLabelId, newContainer);
+                    } else if (newContainer.id === 'unsortedContainer') {
+                        // Card moved to unsorted from a label
+                        handleRemoveLabelFromCard(cardId);
+                    }
                 }
             }
         });
@@ -1504,6 +1535,37 @@ function handleDraggedLabelAssignment(cardId, labelId, container) {
     });
 }
 
+function handleRemoveLabelFromCard(cardId) {
+    showLoading('Removing from label...');
+    
+    fetch(`/api/cards/${cardId}/label`, {
+        method: 'DELETE',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        hideLoading();
+        if (data.success) {
+            showToast('Card moved to unsorted!', 'success');
+            // Refresh the page to update the UI
+            setTimeout(() => window.location.reload(), 1000);
+        } else {
+            showToast(data.message || 'Failed to remove from label', 'error');
+            // Refresh to revert the UI change
+            window.location.reload();
+        }
+    })
+    .catch(error => {
+        hideLoading();
+        showToast('Error removing from label', 'error');
+        console.error('Error:', error);
+        // Refresh to revert the UI change
+        window.location.reload();
+    });
+}
+
 // 401-500: Preview panel functionality
 let currentPreviewCard = null;
 let isEditMode = false;
@@ -1523,12 +1585,6 @@ function initializePreviewPanel() {
 }
 
 function setupPreviewEvents() {
-    // Close preview panel
-    const closeBtn = document.getElementById('closePreviewBtn');
-    if (closeBtn) {
-        closeBtn.addEventListener('click', closePreview);
-    }
-    
     // Edit mode toggle
     const editToggleBtn = document.getElementById('editToggleBtn');
     const editPreviewBtn = document.getElementById('editPreviewBtn');
@@ -1589,19 +1645,20 @@ function setupPreviewEvents() {
 }
 
 function setupCardClickHandlers() {
-    // Simplified card click handling - only for card body clicks (not buttons)
+    // Simplified card click handling - only for unsorted card body clicks (not buttons)
     document.addEventListener('click', function(e) {
-        // Only handle clicks on card content, not buttons
+        // Only handle clicks on unsorted card content, not buttons, and not labeled cards
         const cardItem = e.target.closest('.card-item');
         
         if (cardItem && 
+            !cardItem.classList.contains('labeled-card') &&
             !e.target.closest('.card-actions') && 
             !e.target.closest('.card-footer') &&
             !e.target.closest('button')) {
             
             const cardId = cardItem.dataset.cardId;
             if (cardId) {
-                console.log('📋 Card body clicked, opening preview for:', cardId);
+                console.log('📋 Unsorted card body clicked, opening preview for:', cardId);
                 openPreview(parseInt(cardId));
                 
                 // Update selected state
@@ -1753,8 +1810,8 @@ function closePreview() {
         previewPanel.style.animation = 'slideOut 0.3s ease-in';
         setTimeout(() => {
             previewPanel.classList.add('hidden');
-            previewContent.style.display = 'block';
-            previewLoaded.style.display = 'none';
+            if (previewContent) previewContent.style.display = 'block';
+            if (previewLoaded) previewLoaded.style.display = 'none';
         }, 300);
     }
     
@@ -2297,3 +2354,53 @@ window.addEventListener('unhandledrejection', function(event) {
 });
 
 console.log('🛡️ Global error handlers initialized');
+
+// Image Modal Functions
+function openImageModal() {
+    const previewImage = document.getElementById('previewImage');
+    const previewFilename = document.getElementById('previewFilename');
+    const modalImage = document.getElementById('modalImage');
+    const modalFilename = document.getElementById('modalImageFilename');
+    const imageModal = document.getElementById('imageModal');
+    
+    if (previewImage && modalImage && imageModal) {
+        modalImage.src = previewImage.src;
+        modalImage.alt = previewImage.alt;
+        
+        if (previewFilename && modalFilename) {
+            modalFilename.textContent = previewFilename.textContent;
+        }
+        
+        imageModal.classList.add('show');
+        
+        // Add click handler to close modal when clicking outside image
+        setTimeout(() => {
+            imageModal.addEventListener('click', function(e) {
+                if (e.target === imageModal) {
+                    closeImageModal();
+                }
+            });
+        }, 100);
+    }
+}
+
+function closeImageModal() {
+    const imageModal = document.getElementById('imageModal');
+    if (imageModal) {
+        imageModal.classList.remove('show');
+    }
+}
+
+// Add keyboard support for image modal
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        const imageModal = document.getElementById('imageModal');
+        if (imageModal && imageModal.classList.contains('show')) {
+            closeImageModal();
+        }
+    }
+});
+
+// Make functions globally available
+window.openImageModal = openImageModal;
+window.closeImageModal = closeImageModal;

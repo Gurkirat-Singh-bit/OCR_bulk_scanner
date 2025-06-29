@@ -179,14 +179,8 @@
                                                 </div>
                                             </div>
                                             <div class="card-actions">
-                                                <button class="action-btn preview-card-btn" title="Preview" data-card-id="{{ card.id }}">
-                                                    <i class="fas fa-eye"></i>
-                                                </button>
                                                 <button class="action-btn edit-card-btn" title="Edit" data-card-id="{{ card.id }}">
                                                     <i class="fas fa-edit"></i>
-                                                </button>
-                                                <button class="action-btn remove-label-btn" title="Remove from Label" data-card-id="{{ card.id }}">
-                                                    <i class="fas fa-minus"></i>
                                                 </button>
                                                 <button class="action-btn delete-card-btn" title="Delete" data-card-id="{{ card.id }}">
                                                     <i class="fas fa-trash"></i>
@@ -231,9 +225,6 @@
                 <div class="preview-panel" id="previewPanel">
                     <div class="preview-header">
                         <h3><i class="fas fa-eye"></i> Card Preview</h3>
-                        <button class="close-preview-btn" id="closePreviewBtn">
-                            <i class="fas fa-times"></i>
-                        </button>
                     </div>
                     
                     <div class="preview-content" id="previewContent">
@@ -247,87 +238,11 @@
                     <div class="preview-loaded" id="previewLoaded" style="display: none;">
                         <!-- Card Image -->
                         <div class="preview-image-section">
-                            <div class="image-container">
+                            <div class="image-container" style="cursor: pointer;" onclick="openImageModal()">
                                 <img id="previewImage" src="" alt="Business Card" />
-                                <div class="image-overlay">
-                                    <span class="image-filename" id="previewFilename"></span>
-                                </div>
                             </div>
-                        </div>
-                        
-                        <!-- Card Details -->
-                        <div class="preview-details-section">
-                            <div class="details-header">
-                                <h4><i class="fas fa-address-card"></i> Contact Information</h4>
-                                <div class="edit-mode-toggle">
-                                    <button class="edit-toggle-btn" id="editToggleBtn">
-                                        <i class="fas fa-edit"></i> Edit
-                                    </button>
-                                </div>
-                            </div>
-                            
-                            <div class="details-form" id="previewForm">
-                                <div class="form-group">
-                                    <label><i class="fas fa-user"></i> Name</label>
-                                    <input type="text" id="previewName" readonly>
-                                </div>
-                                
-                                <div class="form-group">
-                                    <label><i class="fas fa-building"></i> Company</label>
-                                    <input type="text" id="previewCompany" readonly>
-                                </div>
-                                
-                                <div class="form-group">
-                                    <label><i class="fas fa-user-tie"></i> Designation</label>
-                                    <input type="text" id="previewDesignation" readonly>
-                                </div>
-                                
-                                <div class="form-row">
-                                    <div class="form-group">
-                                        <label><i class="fas fa-envelope"></i> Email</label>
-                                        <input type="email" id="previewEmail" readonly>
-                                    </div>
-                                    <div class="form-group">
-                                        <label><i class="fas fa-phone"></i> Phone</label>
-                                        <input type="tel" id="previewPhone" readonly>
-                                    </div>
-                                </div>
-                                
-                                <div class="form-group">
-                                    <label><i class="fas fa-globe"></i> Website</label>
-                                    <input type="url" id="previewWebsite" readonly>
-                                </div>
-                                
-                                <div class="form-group">
-                                    <label><i class="fas fa-flag"></i> Country</label>
-                                    <div class="country-selector">
-                                        <select id="previewCountry" disabled>
-                                            <option value="">Select Country...</option>
-                                        </select>
-                                        <span class="country-flag-display" id="previewFlag">🌍</span>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <!-- Action Buttons -->
-                            <div class="preview-actions" id="previewActions">
-                                <div class="view-actions" id="viewActions">
-                                    <button class="action-btn edit-btn" id="editPreviewBtn">
-                                        <i class="fas fa-edit"></i> Edit
-                                    </button>
-                                    <button class="action-btn delete-btn" id="deletePreviewBtn">
-                                        <i class="fas fa-trash"></i> Delete
-                                    </button>
-                                </div>
-                                
-                                <div class="edit-actions" id="editActions" style="display: none;">
-                                    <button class="action-btn save-btn" id="savePreviewBtn">
-                                        <i class="fas fa-save"></i> Save Changes
-                                    </button>
-                                    <button class="action-btn cancel-btn" id="cancelPreviewBtn">
-                                        <i class="fas fa-times"></i> Cancel
-                                    </button>
-                                </div>
+                            <div class="image-info">
+                                <span class="image-filename" id="previewFilename"></span>
                             </div>
                         </div>
                     </div>
@@ -433,6 +348,21 @@
             <div class="spinner"></div>
             <h3 id="loadingTitle">Processing...</h3>
             <p id="loadingSubtitle">Please wait</p>
+        </div>
+    </div>
+
+    <!-- Image Modal for larger view -->
+    <div class="modal-overlay" id="imageModal" style="display: none;">
+        <div class="image-modal-content">
+            <div class="image-modal-header">
+                <span class="image-modal-filename" id="modalImageFilename"></span>
+                <button class="modal-close" onclick="closeImageModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="image-modal-body">
+                <img id="modalImage" src="" alt="Business Card Large View" />
+            </div>
         </div>
     </div>
 
