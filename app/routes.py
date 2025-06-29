@@ -296,12 +296,26 @@ def manage_data():
     """
     Render the data management interface
     """
-    from app.mongo import get_all_labels, get_cards_by_status
+    from app.mongo import get_all_labels, get_cards_by_status, update_extraction_record, detect_country_from_company
     
     # Get unsorted and sorted cards
     unsorted_cards = get_cards_by_status(is_sorted=False)
     sorted_cards = get_cards_by_status(is_sorted=True)
     labels = get_all_labels()
+    
+    # Backfill country data for cards that don't have it
+    all_cards = unsorted_cards + sorted_cards
+    for card in all_cards:
+        if not card.get('country') or card.get('country') == 'UNKNOWN' or not card.get('flag'):
+            if card.get('company'):
+                country_code, flag = detect_country_from_company(card['company'])
+                # Update the card with country information
+                update_data = {'country': country_code, 'flag': flag}
+                update_extraction_record(card['id'], update_data)
+                # Update the card object for immediate display
+                card['country'] = country_code
+                card['flag'] = flag
+                print(f"🌍 Updated card {card['id']} with country: {country_code} {flag}")
     
     return render_template('manage.html', 
                          unsorted_cards=unsorted_cards,
@@ -405,8 +419,8 @@ def handle_card(card_id):
         from app.mongo import update_extraction_record, detect_country_from_company
         data = request.get_json()
         
-        # Detect country if company is updated
-        if 'company' in data:
+        # Detect country if company is updated but no country is explicitly provided
+        if 'company' in data and ('country' not in data or not data.get('country') or data.get('country').strip() == ''):
             country_code, flag = detect_country_from_company(data['company'])
             data['country'] = country_code
             data['flag'] = flag

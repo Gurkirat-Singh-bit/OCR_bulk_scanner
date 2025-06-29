@@ -1797,6 +1797,8 @@ body {
     align-items: center;
     min-height: 200px;
     max-height: 350px;
+    margin: 0 auto;
+    width: 100%;
 }
 
 .empty-state i {
@@ -1808,6 +1810,12 @@ body {
 .empty-state h3 {
     color: var(--text-medium);
     margin-bottom: 0.5rem;
+    text-align: center;
+}
+
+.empty-state p {
+    text-align: center;
+    margin: 0;
 }
 
 .create-first-label-btn {
@@ -2508,4 +2516,81 @@ body {
     border-radius: 4px;
     font-size: 0.8rem;
     white-space: nowrap;
+}
+
+/* Country Select Dropdown Styles */
+.country-select-wrapper {
+    position: relative;
+    width: 100%;
+}
+
+.country-dropdown {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    max-height: 200px;
+    overflow-y: auto;
+    background: var(--white);
+    border: 1px solid var(--border-light);
+    border-radius: 8px;
+    box-shadow: var(--shadow-card);
+    z-index: 1000;
+    margin-top: 4px;
+}
+
+.country-option {
+    display: flex;
+    align-items: center;
+    padding: 12px 16px;
+    cursor: pointer;
+    transition: background-color var(--transition-normal);
+    border-bottom: 1px solid var(--border-lighter);
+}
+
+.country-option:last-child {
+    border-bottom: none;
+}
+
+.country-option:hover {
+    background-color: var(--surface-lighter);
+}
+
+.country-option.selected {
+    background-color: var(--accent-primary);
+    color: var(--white);
+}
+
+.country-flag {
+    font-size: 1.2rem;
+    margin-right: 12px;
+    min-width: 24px;
+    text-align: center;
+}
+
+.country-name {
+    font-weight: 500;
+    color: var(--text-primary);
+}
+
+.country-option.selected .country-name {
+    color: var(--white);
+}
+
+.country-dropdown::-webkit-scrollbar {
+    width: 6px;
+}
+
+.country-dropdown::-webkit-scrollbar-track {
+    background: var(--surface-light);
+    border-radius: 3px;
+}
+
+.country-dropdown::-webkit-scrollbar-thumb {
+    background: var(--border-medium);
+    border-radius: 3px;
+}
+
+.country-dropdown::-webkit-scrollbar-thumb:hover {
+    background: var(--border-dark);
 }

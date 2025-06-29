@@ -1,3 +1,24 @@
+// Country data with flags and names
+const COUNTRIES = [
+    { name: 'Afghanistan', flag: '🇦🇫' }, { name: 'Albania', flag: '🇦🇱' }, { name: 'Algeria', flag: '🇩🇿' },
+    { name: 'Argentina', flag: '🇦🇷' }, { name: 'Armenia', flag: '🇦🇲' }, { name: 'Australia', flag: '🇦🇺' },
+    { name: 'Austria', flag: '🇦🇹' }, { name: 'Azerbaijan', flag: '🇦🇿' }, { name: 'Bangladesh', flag: '🇧🇩' },
+    { name: 'Belgium', flag: '🇧🇪' }, { name: 'Brazil', flag: '🇧🇷' }, { name: 'Bulgaria', flag: '🇧🇬' },
+    { name: 'Canada', flag: '🇨🇦' }, { name: 'Chile', flag: '🇨🇱' }, { name: 'China', flag: '🇨🇳' },
+    { name: 'Colombia', flag: '🇨🇴' }, { name: 'Croatia', flag: '🇭🇷' }, { name: 'Czech Republic', flag: '🇨🇿' },
+    { name: 'Denmark', flag: '🇩🇰' }, { name: 'Egypt', flag: '🇪🇬' }, { name: 'Finland', flag: '🇫🇮' },
+    { name: 'France', flag: '🇫🇷' }, { name: 'Germany', flag: '🇩🇪' }, { name: 'Greece', flag: '🇬🇷' },
+    { name: 'India', flag: '🇮🇳' }, { name: 'Indonesia', flag: '🇮🇩' }, { name: 'Iran', flag: '🇮🇷' },
+    { name: 'Ireland', flag: '🇮🇪' }, { name: 'Israel', flag: '🇮🇱' }, { name: 'Italy', flag: '🇮🇹' },
+    { name: 'Japan', flag: '🇯🇵' }, { name: 'Kazakhstan', flag: '🇰🇿' }, { name: 'Malaysia', flag: '🇲🇾' },
+    { name: 'Mexico', flag: '🇲🇽' }, { name: 'Netherlands', flag: '🇳🇱' }, { name: 'Nigeria', flag: '🇳🇬' },
+    { name: 'Norway', flag: '🇳🇴' }, { name: 'Pakistan', flag: '🇵🇰' }, { name: 'Poland', flag: '🇵🇱' },
+    { name: 'Portugal', flag: '🇵🇹' }, { name: 'Romania', flag: '🇷🇴' }, { name: 'Russia', flag: '🇷🇺' },
+    { name: 'Singapore', flag: '🇸🇬' }, { name: 'South Korea', flag: '🇰🇷' }, { name: 'Spain', flag: '🇪🇸' },
+    { name: 'Sweden', flag: '🇸🇪' }, { name: 'Switzerland', flag: '🇨🇭' }, { name: 'Turkey', flag: '🇹🇷' },
+    { name: 'Ukraine', flag: '🇺🇦' }, { name: 'United Kingdom', flag: '🇬🇧' }, { name: 'United States', flag: '🇺🇸' }
+];
+
 // 1-20: Data Management Interface JavaScript
 document.addEventListener('DOMContentLoaded', function() {
     console.log('🚀 DOM Content Loaded - initializing manage interface');
@@ -28,8 +49,12 @@ document.addEventListener('DOMContentLoaded', function() {
         initializeManageInterface();
         setupEventListeners();
         initializeDragAndDrop();
-        populateCountryFilter();
         initializePreviewPanel();
+        
+        // Populate country filter after a slight delay to ensure cards are rendered
+        setTimeout(() => {
+            populateCountryFilter();
+        }, 500);
         
         // Enhance filter dropdowns
         enhanceFilterDropdowns();
@@ -346,6 +371,17 @@ function setupEventListeners() {
             return;
         }
         
+        // Handle direct card clicks for preview
+        if (e.target.closest('.card-item') && !e.target.closest('button') && !e.target.closest('.card-actions')) {
+            const card = e.target.closest('.card-item');
+            const cardId = card?.dataset.cardId;
+            if (cardId) {
+                console.log('🃏 Card clicked for preview', cardId);
+                openPreview(parseInt(cardId));
+            }
+            return;
+        }
+        
         if (e.target.matches('.edit-label-btn, .edit-label-btn *')) {
             e.preventDefault();
             const btn = e.target.closest('.edit-label-btn');
@@ -461,100 +497,106 @@ function showAllCards() {
 // 121-160: Filter functionality
 function populateCountryFilter() {
     const countryFilter = document.getElementById('countryFilter');
-    if (!countryFilter) return;
+    if (!countryFilter) {
+        console.error('❌ Country filter element not found');
+        return;
+    }
     
-    console.log('🌍 Populating country filter...');
+    console.log('🌍 Populating country filter with counts...');
     
-    // First, fetch all available countries from the API
-    fetch('/api/countries')
-        .then(response => {
-            console.log('Countries API response status:', response.status);
-            if (!response.ok) {
-                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-            }
-            return response.json();
-        })
-        .then(data => {
-            console.log('Countries API data:', data);
-            if (data.success && data.countries) {
-                // Clear existing options except "All Countries"
-                while (countryFilter.children.length > 1) {
-                    countryFilter.removeChild(countryFilter.lastChild);
+    // Clear existing options except "All Countries"
+    while (countryFilter.children.length > 1) {
+        countryFilter.removeChild(countryFilter.lastChild);
+    }
+    
+    // Get all cards and count by country
+    const cards = document.querySelectorAll('.card-item');
+    const countryCount = new Map();
+    
+    console.log(`Found ${cards.length} cards to analyze`);
+    
+    if (cards.length === 0) {
+        console.warn('No cards found for country analysis');
+        return;
+    }
+    
+    cards.forEach((card, index) => {
+        try {
+            const cardData = parseCardData(card);
+            console.log(`Card ${index + 1}:`, cardData);
+            
+            if (cardData) {
+                let country = 'Unknown';
+                
+                // Try to get country from different sources
+                if (cardData.country && cardData.country !== 'UNKNOWN' && cardData.country.toUpperCase() !== 'UNKNOWN' && cardData.country.trim() !== '') {
+                    // If it's a country code, convert to country name
+                    const countryCode = cardData.country.toUpperCase();
+                    const countryCodeMapping = {
+                        'IN': 'India', 'US': 'United States', 'GB': 'United Kingdom', 'DE': 'Germany',
+                        'FR': 'France', 'IT': 'Italy', 'NL': 'Netherlands', 'SE': 'Sweden', 'AU': 'Australia',
+                        'CA': 'Canada', 'JP': 'Japan', 'CN': 'China', 'RU': 'Russia', 'BR': 'Brazil'
+                    };
+                    
+                    if (countryCodeMapping[countryCode]) {
+                        country = countryCodeMapping[countryCode];
+                    } else if (cardData.country.length > 2) {
+                        // It's already a country name
+                        country = cardData.country;
+                    } else {
+                        country = cardData.country;
+                    }
+                } else {
+                    // Try to extract from flag if available
+                    const flagElement = card.querySelector('.country-flag');
+                    if (flagElement && flagElement.textContent !== '🌍') {
+                        // Try to match flag to country name
+                        const flag = flagElement.textContent;
+                        const countryFromFlag = COUNTRIES.find(c => c.flag === flag);
+                        if (countryFromFlag) {
+                            country = countryFromFlag.name;
+                        }
+                    }
                 }
                 
-                // Get countries that actually appear in cards
-                const cards = document.querySelectorAll('.card-item');
-                const cardsCountries = new Set();
-                
-                cards.forEach(card => {
-                    const cardData = safelyCallFunction(parseCardData, card);
-                    if (cardData && cardData.country && cardData.country !== 'UNKNOWN') {
-                        cardsCountries.add(cardData.country);
-                    }
-                });
-                
-                // Add countries from API that also appear in cards
-                data.countries.forEach(([code, flag]) => {
-                    if (cardsCountries.has(code)) {
-                        const option = document.createElement('option');
-                        option.value = code;
-                        option.textContent = `${flag} ${code}`;
-                        option.dataset.flag = flag;
-                        countryFilter.appendChild(option);
-                    }
-                });
-                
-                // Add any remaining countries from cards that weren't in API
-                const sortedRemainingCountries = Array.from(cardsCountries).filter(country => 
-                    !data.countries.some(([code]) => code === country)
-                ).sort();
-                
-                sortedRemainingCountries.forEach(country => {
-                    const option = document.createElement('option');
-                    option.value = country;
-                    option.textContent = `🌍 ${country}`;
-                    countryFilter.appendChild(option);
-                });
-                
-                console.log('✅ Country filter populated successfully');
-            } else {
-                console.warn('Invalid API response, falling back to local method');
-                populateCountryFilterFallback();
+                console.log(`Card ${index + 1} country:`, country);
+                countryCount.set(country, (countryCount.get(country) || 0) + 1);
             }
-        })
-        .catch(error => {
-            console.error('Error loading countries from API:', error);
-            console.log('Falling back to local country detection...');
-            populateCountryFilterFallback();
-        });
-}
-
-function populateCountryFilterFallback() {
-    console.log('🔄 Using fallback country filter population...');
-    const countryFilter = document.getElementById('countryFilter');
-    if (!countryFilter) return;
-    
-    const cards = document.querySelectorAll('.card-item');
-    const countries = new Set();
-    
-    cards.forEach(card => {
-        const cardData = safelyCallFunction(parseCardData, card);
-        if (!cardData) return; // Skip if parsing failed
-        
-        if (cardData.country && cardData.country !== 'UNKNOWN') {
-            countries.add(cardData.country);
+        } catch (error) {
+            console.error(`Error processing card ${index + 1}:`, error);
         }
     });
     
-    const sortedCountries = Array.from(countries).sort();
-    sortedCountries.forEach(country => {
-        const option = document.createElement('option');
-        option.value = country;
-        option.textContent = country;
-        countryFilter.appendChild(option);
+    console.log('Country counts:', Array.from(countryCount.entries()));
+    
+    // Convert to array and sort by count (descending) then by name
+    const sortedCountries = Array.from(countryCount.entries())
+        .sort((a, b) => {
+            if (b[1] !== a[1]) return b[1] - a[1]; // Sort by count descending
+            return a[0].localeCompare(b[0]); // Then by name ascending
+        });
+    
+    console.log('Sorted countries:', sortedCountries);
+    
+    // Add options with flags and counts
+    sortedCountries.forEach(([country, count]) => {
+        try {
+            const countryData = COUNTRIES.find(c => c.name.toLowerCase() === country.toLowerCase());
+            const flag = countryData ? countryData.flag : '🌍';
+            
+            const option = document.createElement('option');
+            option.value = country;
+            option.textContent = `${flag} ${country} (${count})`;
+            option.dataset.flag = flag;
+            countryFilter.appendChild(option);
+            
+            console.log(`Added option: ${flag} ${country} (${count})`);
+        } catch (error) {
+            console.error(`Error adding country option for ${country}:`, error);
+        }
     });
     
-    console.log(`✅ Fallback populated ${sortedCountries.length} countries`);
+    console.log(`✅ Country filter populated with ${sortedCountries.length} countries`);
 }
 
 function handleFilterChange(event) {
@@ -591,27 +633,53 @@ function filterCards(labelId, country) {
     let hiddenCount = 0;
     
     cards.forEach((card, index) => {
-        const cardData = safelyCallFunction(parseCardData, card);
-        if (!cardData) {
-            console.warn(`Skipping card ${index} - failed to parse data`);
-            return;
-        }
-        
-        let show = true;
-        
-        // Filter by label
-        if (labelId && labelId !== '') {
-            if (cardData.label_id != labelId) {
-                show = false;
-                console.log(`Card ${cardData.id} hidden by label filter: ${cardData.label_id} != ${labelId}`);
+        try {
+            const cardData = parseCardData(card);
+            if (!cardData) {
+                console.warn(`Skipping card ${index} - failed to parse data`);
+                return;
             }
-        }
+            
+            let show = true;
+            
+            // Filter by label
+            if (labelId && labelId !== '') {
+                if (cardData.label_id != labelId) {
+                    show = false;
+                    console.log(`Card ${cardData.id} hidden by label filter: ${cardData.label_id} != ${labelId}`);
+                }
+            }
         
         // Filter by country
         if (country && country !== '') {
-            if (cardData.country !== country) {
+            let cardCountry = 'Unknown';
+            
+            // Convert card country code to name if needed
+            if (cardData.country && cardData.country !== 'UNKNOWN' && cardData.country.toUpperCase() !== 'UNKNOWN' && cardData.country.trim() !== '') {
+                const countryCode = cardData.country.toUpperCase();
+                const countryCodeMapping = {
+                    'IN': 'India', 'US': 'United States', 'GB': 'United Kingdom', 'DE': 'Germany',
+                    'FR': 'France', 'IT': 'Italy', 'NL': 'Netherlands', 'SE': 'Sweden', 'AU': 'Australia',
+                    'CA': 'Canada', 'JP': 'Japan', 'CN': 'China', 'RU': 'Russia', 'BR': 'Brazil'
+                };
+                
+                if (countryCodeMapping[countryCode]) {
+                    cardCountry = countryCodeMapping[countryCode];
+                } else if (cardData.country.length > 2) {
+                    cardCountry = cardData.country;
+                } else {
+                    cardCountry = cardData.country;
+                }
+            } else {
+                // Card has no country or UNKNOWN country
+                cardCountry = 'Unknown';
+            }
+            
+            console.log(`Card ${cardData.id} country comparison: "${cardCountry}" vs filter "${country}"`);
+            
+            if (cardCountry !== country) {
                 show = false;
-                console.log(`Card ${cardData.id} hidden by country filter: ${cardData.country} != ${country}`);
+                console.log(`Card ${cardData.id} hidden by country filter: ${cardCountry} != ${country}`);
             }
         }
         
@@ -622,6 +690,9 @@ function filterCards(labelId, country) {
         } else {
             card.style.display = 'none';
             hiddenCount++;
+        }
+        } catch (error) {
+            console.error(`Error filtering card ${index}:`, error);
         }
     });
     
@@ -1171,6 +1242,17 @@ function handleEditCard(button) {
     document.getElementById('editEmail').value = cardData.email || '';
     document.getElementById('editPhone').value = cardData.phone || '';
     document.getElementById('editWebsite').value = cardData.website || '';
+    document.getElementById('editCountry').value = cardData.country || '';
+    
+    // Set flag data if available
+    const countryInput = document.getElementById('editCountry');
+    if (cardData.flag) {
+        countryInput.dataset.flag = cardData.flag;
+    } else if (cardData.country) {
+        // Try to get flag from country name
+        const country = COUNTRIES.find(c => c.name.toLowerCase() === cardData.country.toLowerCase());
+        countryInput.dataset.flag = country ? country.flag : '🌍';
+    }
     
     // Store card ID for saving
     const editForm = document.getElementById('editCardForm');
@@ -1197,7 +1279,9 @@ function handleSaveCard(e) {
         company: document.getElementById('editCompany').value.trim(),
         email: document.getElementById('editEmail').value.trim(),
         phone: document.getElementById('editPhone').value.trim(),
-        website: document.getElementById('editWebsite').value.trim()
+        website: document.getElementById('editWebsite').value.trim(),
+        country: document.getElementById('editCountry').value.trim(),
+        flag: document.getElementById('editCountry').dataset.flag || '🌍'
     };
     
     showLoading('Saving changes...');
@@ -1353,6 +1437,11 @@ function showModal(modalId) {
     const modal = document.getElementById(modalId);
     if (modal) {
         modal.style.display = 'flex';
+        
+        // Initialize country autocomplete for edit card modal
+        if (modalId === 'editCardModal') {
+            initializeCountryAutocomplete();
+        }
         
         // Focus first input
         const firstInput = modal.querySelector('input');
@@ -2389,6 +2478,114 @@ function closeImageModal() {
     if (imageModal) {
         imageModal.classList.remove('show');
     }
+}
+
+// Country Autocomplete Functionality
+function initializeCountryAutocomplete() {
+    const countryInput = document.getElementById('editCountry');
+    const dropdown = document.getElementById('countryDropdown');
+    
+    if (!countryInput || !dropdown) return;
+    
+    let selectedIndex = -1;
+    
+    // Show dropdown on focus
+    countryInput.addEventListener('focus', function() {
+        dropdown.style.display = 'block';
+        populateCountryDropdown();
+    });
+    
+    // Filter countries on input
+    countryInput.addEventListener('input', function() {
+        const searchTerm = this.value.toLowerCase();
+        filterCountries(searchTerm);
+        selectedIndex = -1;
+    });
+    
+    // Handle keyboard navigation
+    countryInput.addEventListener('keydown', function(e) {
+        const options = dropdown.querySelectorAll('.country-option:not([style*="display: none"])');
+        
+        switch(e.key) {
+            case 'ArrowDown':
+                e.preventDefault();
+                selectedIndex = Math.min(selectedIndex + 1, options.length - 1);
+                updateSelection(options);
+                break;
+            case 'ArrowUp':
+                e.preventDefault();
+                selectedIndex = Math.max(selectedIndex - 1, -1);
+                updateSelection(options);
+                break;
+            case 'Enter':
+                e.preventDefault();
+                if (selectedIndex >= 0 && options[selectedIndex]) {
+                    selectCountry(options[selectedIndex]);
+                }
+                break;
+            case 'Escape':
+                dropdown.style.display = 'none';
+                selectedIndex = -1;
+                break;
+        }
+    });
+    
+    // Hide dropdown when clicking outside
+    document.addEventListener('click', function(e) {
+        if (!countryInput.contains(e.target) && !dropdown.contains(e.target)) {
+            dropdown.style.display = 'none';
+            selectedIndex = -1;
+        }
+    });
+}
+
+function populateCountryDropdown() {
+    const dropdown = document.getElementById('countryDropdown');
+    dropdown.innerHTML = '';
+    
+    COUNTRIES.forEach(country => {
+        const option = document.createElement('div');
+        option.className = 'country-option';
+        option.innerHTML = '<span class="country-flag">' + country.flag + '</span><span class="country-name">' + country.name + '</span>';
+        option.addEventListener('click', () => selectCountry(option));
+        dropdown.appendChild(option);
+    });
+}
+
+function filterCountries(searchTerm) {
+    const dropdown = document.getElementById('countryDropdown');
+    const options = dropdown.querySelectorAll('.country-option');
+    
+    options.forEach(option => {
+        const countryName = option.querySelector('.country-name').textContent.toLowerCase();
+        if (countryName.includes(searchTerm)) {
+            option.style.display = 'flex';
+        } else {
+            option.style.display = 'none';
+        }
+    });
+}
+
+function updateSelection(options) {
+    options.forEach((option, index) => {
+        option.classList.toggle('selected', index === selectedIndex);
+    });
+    
+    if (selectedIndex >= 0 && options[selectedIndex]) {
+        options[selectedIndex].scrollIntoView({ block: 'nearest' });
+    }
+}
+
+function selectCountry(option) {
+    const countryInput = document.getElementById('editCountry');
+    const dropdown = document.getElementById('countryDropdown');
+    const countryName = option.querySelector('.country-name').textContent;
+    
+    countryInput.value = countryName;
+    dropdown.style.display = 'none';
+    
+    const flag = option.querySelector('.country-flag').textContent;
+    countryInput.dataset.flag = flag;
 }
 
 // Add keyboard support for image modal

@@ -95,9 +95,6 @@
                                         </div>
                                     </div>
                                     <div class="card-actions">
-                                        <button class="action-btn preview-card-btn" title="Preview" data-card-id="{{ card.id }}">
-                                            <i class="fas fa-eye"></i>
-                                        </button>
                                         <button class="action-btn edit-card-btn" title="Edit" data-card-id="{{ card.id }}">
                                             <i class="fas fa-edit"></i>
                                         </button>
@@ -327,9 +324,20 @@
                             <input type="tel" id="editPhone" placeholder="Phone number">
                         </div>
                     </div>
-                    <div class="form-group">
-                        <label for="editWebsite">Website</label>
-                        <input type="url" id="editWebsite" placeholder="https://website.com">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="editWebsite">Website</label>
+                            <input type="url" id="editWebsite" placeholder="https://website.com">
+                        </div>
+                        <div class="form-group">
+                            <label for="editCountry">Country</label>
+                            <div class="country-select-wrapper">
+                                <input type="text" id="editCountry" placeholder="Type to search countries..." autocomplete="off">
+                                <div class="country-dropdown" id="countryDropdown" style="display: none;">
+                                    <!-- Country options will be populated by JavaScript -->
+                                </div>
+                            </div>
+                        </div>
                     </div>
                     <div class="form-actions">
                         <button type="button" class="cancel-btn" data-modal="editCardModal">Cancel</button>

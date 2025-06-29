@@ -8,10 +8,43 @@ from PIL import Image, ImageOps
 from io import BytesIO
 from app.mongo import add_extraction_record, load_extraction_data, update_extraction_record, delete_extraction_record
 
-# 11-20: Load environment variables
+# 11-20: Load environment variables and country mapping
 load_dotenv()
 GEMINI_API_KEY = os.getenv('GEMINI_API_KEY')
 GEMINI_API_URL = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={GEMINI_API_KEY}"
+
+# Country to flag mapping
+COUNTRY_FLAGS = {
+    'afghanistan': '🇦🇫', 'albania': '🇦🇱', 'algeria': '🇩🇿', 'argentina': '🇦🇷', 'armenia': '🇦🇲',
+    'australia': '🇦🇺', 'austria': '🇦🇹', 'azerbaijan': '🇦🇿', 'bangladesh': '🇧🇩', 'belgium': '🇧🇪',
+    'brazil': '🇧🇷', 'bulgaria': '🇧🇬', 'canada': '🇨🇦', 'chile': '🇨🇱', 'china': '🇨🇳',
+    'colombia': '🇨🇴', 'croatia': '🇭🇷', 'czech republic': '🇨🇿', 'denmark': '🇩🇰', 'egypt': '🇪🇬',
+    'finland': '🇫🇮', 'france': '🇫🇷', 'germany': '🇩🇪', 'greece': '🇬🇷', 'india': '🇮🇳',
+    'indonesia': '🇮🇩', 'iran': '🇮🇷', 'ireland': '🇮🇪', 'israel': '🇮🇱', 'italy': '🇮🇹',
+    'japan': '🇯🇵', 'kazakhstan': '🇰🇿', 'malaysia': '🇲🇾', 'mexico': '🇲🇽', 'netherlands': '🇳🇱',
+    'nigeria': '🇳🇬', 'norway': '🇳🇴', 'pakistan': '🇵🇰', 'poland': '🇵🇱', 'portugal': '🇵🇹',
+    'romania': '🇷🇴', 'russia': '🇷🇺', 'singapore': '🇸🇬', 'south korea': '🇰🇷', 'spain': '🇪🇸',
+    'sweden': '🇸🇪', 'switzerland': '🇨🇭', 'turkey': '🇹🇷', 'ukraine': '🇺🇦', 
+    'united kingdom': '🇬🇧', 'uk': '🇬🇧', 'britain': '🇬🇧', 'england': '🇬🇧',
+    'united states': '🇺🇸', 'usa': '🇺🇸', 'us': '🇺🇸', 'america': '🇺🇸'
+}
+
+def get_country_flag(country_name):
+    """Get flag emoji for a country name"""
+    if not country_name:
+        return '🌍'
+    
+    # Try exact match first
+    country_lower = country_name.lower().strip()
+    if country_lower in COUNTRY_FLAGS:
+        return COUNTRY_FLAGS[country_lower]
+    
+    # Try partial matches
+    for country, flag in COUNTRY_FLAGS.items():
+        if country in country_lower or country_lower in country:
+            return COUNTRY_FLAGS[country]
+    
+    return '🌍'  # Default flag
 
 # 21-60: Gemini image extraction function
 def extract_data_from_image_gemini(image_bytes):
@@ -35,7 +68,7 @@ def extract_data_from_image_gemini(image_bytes):
         "contents": [
             {
                 "parts": [
-                    {"text": "Extract name, phone number, email, and company from this visiting card. Return only JSON with fields: name, phone, email, company."},
+                    {"text": "Extract information from this visiting card and return only JSON with these fields: name, phone, email, company, country. For country, detect from address, phone number format, or any country indicators in the text. If no country is detectable, leave it empty."},
                     {"inline_data": {"mime_type": "image/jpeg", "data": img_b64}}
                 ]
             }
@@ -66,21 +99,28 @@ def extract_data_from_image_gemini(image_bytes):
         print(f"✅ Parsed data: {data}")
         
         # Ensure all required fields are present
+        extracted_country = data.get("country", "").strip()
+        
+        # Get flag for the country
+        flag = get_country_flag(extracted_country)
+        
         result_data = {
             "name": data.get("name", "").strip(),
             "phone": data.get("phone", "").strip(), 
             "email": data.get("email", "").strip(),
-            "company": data.get("company", "").strip()
+            "company": data.get("company", "").strip(),
+            "country": extracted_country,
+            "flag": flag
         }
         
         return result_data
     except json.JSONDecodeError as e:
         print(f"❌ JSON Parse Error: {e}")
         print(f"Raw text was: {text}")
-        return {"name": "", "phone": "", "email": "", "company": ""}
+        return {"name": "", "phone": "", "email": "", "company": "", "country": "", "flag": "🌍"}
     except Exception as e:
         print(f"❌ Gemini API Error: {e}")
-        return {"name": "", "phone": "", "email": "", "company": ""}
+        return {"name": "", "phone": "", "email": "", "company": "", "country": "", "flag": "🌍"}
 
 # 61-100: MongoDB data persistence functions (imported from mongo.py)
 # All data persistence functions are now imported from app.mongo module:
