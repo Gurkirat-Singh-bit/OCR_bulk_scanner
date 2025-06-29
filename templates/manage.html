@@ -121,15 +121,10 @@
                                     {% endif %}
                                 </div>
                                 <div class="card-footer">
-                                    <select class="label-selector" data-card-id="{{ card.id }}">
-                                        <option value="">Assign to Label...</option>
-                                        {% for label in labels %}
-                                        <option value="{{ label.id }}" data-label-name="{{ label.name }}">{{ label.name }}</option>
-                                        {% endfor %}
-                                    </select>
-                                    <button class="assign-label-btn" data-card-id="{{ card.id }}">
-                                        <i class="fas fa-tag"></i> Assign
-                                    </button>
+                                    <div class="drag-instruction">
+                                        <i class="fas fa-arrows-alt"></i>
+                                        <span>Drag to organize</span>
+                                    </div>
                                 </div>
                             </div>
                             {% endfor %}

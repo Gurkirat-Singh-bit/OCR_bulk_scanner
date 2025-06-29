@@ -333,6 +333,32 @@ def handle_labels():
         else:
             return jsonify({'success': False, 'message': 'Failed to create label'})
 
+@main_bp.route('/api/labels/<int:label_id>', methods=['PUT', 'DELETE'])
+def handle_label_operations(label_id):
+    """
+    Handle label operations (PUT for edit, DELETE for delete)
+    """
+    if request.method == 'PUT':
+        from app.mongo import update_label
+        data = request.get_json()
+        label_name = data.get('name', '').strip()
+        color = data.get('color', '#0891b2')
+        
+        if not label_name:
+            return jsonify({'success': False, 'message': 'Label name is required'})
+        
+        if update_label(label_id, label_name, color):
+            return jsonify({'success': True, 'message': 'Label updated successfully'})
+        else:
+            return jsonify({'success': False, 'message': 'Failed to update label'})
+    
+    elif request.method == 'DELETE':
+        from app.mongo import delete_label
+        if delete_label(label_id):
+            return jsonify({'success': True, 'message': 'Label deleted successfully'})
+        else:
+            return jsonify({'success': False, 'message': 'Failed to delete label'})
+
 @main_bp.route('/api/cards/<int:card_id>/label', methods=['POST', 'DELETE'])
 def handle_card_label(card_id):
     """

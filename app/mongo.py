@@ -262,6 +262,69 @@ def get_all_labels():
         print(f"❌ Error getting labels: {str(e)}")
         return []
 
+def update_label(label_id, label_name, color):
+    """
+    Update an existing label
+    Returns True if successful
+    """
+    try:
+        labels_collection = collection.database['labels']
+        result = labels_collection.update_one(
+            {'id': label_id},
+            {
+                '$set': {
+                    'name': label_name,
+                    'color': color,
+                    'updated_at': datetime.now()
+                }
+            }
+        )
+        
+        if result.modified_count > 0:
+            print(f"✅ Label {label_id} updated successfully")
+            return True
+        
+        return False
+        
+    except Exception as e:
+        print(f"❌ Error updating label: {str(e)}")
+        return False
+
+def delete_label(label_id):
+    """
+    Delete a label and remove it from all associated cards
+    Returns True if successful
+    """
+    try:
+        # First, remove the label from all cards that have it
+        cards_result = collection.update_many(
+            {'label_id': label_id},
+            {
+                '$unset': {
+                    'label_id': '',
+                    'label_name': ''
+                },
+                '$set': {
+                    'is_sorted': False,
+                    'updated_at': datetime.now()
+                }
+            }
+        )
+        
+        # Then delete the label itself
+        labels_collection = collection.database['labels']
+        label_result = labels_collection.delete_one({'id': label_id})
+        
+        if label_result.deleted_count > 0:
+            print(f"✅ Label {label_id} deleted successfully, {cards_result.modified_count} cards updated")
+            return True
+        
+        return False
+        
+    except Exception as e:
+        print(f"❌ Error deleting label: {str(e)}")
+        return False
+
 def update_label_card_count(label_id, count_change):
     """
     Update the card count for a label

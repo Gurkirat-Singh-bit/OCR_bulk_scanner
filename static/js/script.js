@@ -48,6 +48,12 @@ document.addEventListener('DOMContentLoaded', function() {
         uploadForm.addEventListener('submit', handleFormSubmit);
         clearBtn.addEventListener('click', clearAllFiles);
 
+        // Refresh button for recent extractions
+        const refreshBtn = document.getElementById('refreshBtn');
+        if (refreshBtn) {
+            refreshBtn.addEventListener('click', handleRefreshResults);
+        }
+
         // Auto-hide alerts
         setTimeout(hideAlerts, 5000);
     }
@@ -582,5 +588,37 @@ document.addEventListener('DOMContentLoaded', function() {
         const sizes = ['Bytes', 'KB', 'MB', 'GB'];
         const i = Math.floor(Math.log(bytes) / Math.log(k));
         return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    }
+
+    // Refresh button handler for recent extractions
+    function handleRefreshResults() {
+        console.log('🔄 Refreshing recent extractions...');
+        
+        // Add visual feedback to the refresh button
+        const refreshBtn = document.getElementById('refreshBtn');
+        if (refreshBtn) {
+            const icon = refreshBtn.querySelector('i');
+            if (icon) {
+                icon.classList.add('fa-spin');
+            }
+            refreshBtn.disabled = true;
+        }
+        
+        // Reload recent results
+        loadRecentResults();
+        
+        // Reset button state after a short delay
+        setTimeout(() => {
+            if (refreshBtn) {
+                const icon = refreshBtn.querySelector('i');
+                if (icon) {
+                    icon.classList.remove('fa-spin');
+                }
+                refreshBtn.disabled = false;
+            }
+            
+            // Show success feedback
+            showSuccessToast();
+        }, 1000);
     }
 });

@@ -222,6 +222,45 @@ body {
     color: var(--accent-primary);
 }
 
+/* Section actions styles */
+.section-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.refresh-btn,
+.manage-data-btn {
+    background: var(--white);
+    border: 1px solid var(--border-light);
+    color: var(--text-medium);
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    text-decoration: none;
+    font-size: 0.9rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    box-shadow: var(--shadow-soft);
+}
+
+.refresh-btn:hover,
+.manage-data-btn:hover {
+    background: var(--accent-primary);
+    color: var(--white);
+    border-color: var(--accent-primary);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-medium);
+}
+
+.refresh-btn i,
+.manage-data-btn i {
+    font-size: 0.85rem;
+}
+
 /* 111-150: Upload section styles */
 .upload-section {
     grid-column: 1;
@@ -1307,6 +1346,7 @@ body {
     grid-template-columns: 1fr 1fr;
     gap: 2rem;
     min-height: 600px;
+    align-items: stretch;
 }
 
 .unsorted-section,
@@ -1317,6 +1357,8 @@ body {
     box-shadow: var(--shadow-soft);
     display: flex;
     flex-direction: column;
+    min-height: 600px;
+    height: 100%;
 }
 
 .section-header {
@@ -1355,7 +1397,11 @@ body {
     flex: 1;
     padding: 1rem;
     overflow-y: auto;
-    max-height: calc(100vh - 300px);
+    min-height: 500px;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
 }
 
 /* 751-850: Card item styles */
@@ -1506,10 +1552,14 @@ body {
 
 /* 851-950: Label group styles */
 .label-group {
-    margin-bottom: 1.5rem;
+    margin-bottom: 1rem;
     border: 1px solid var(--border-light);
     border-radius: 10px;
     overflow: hidden;
+}
+
+.label-group:last-child {
+    margin-bottom: 0;
 }
 
 .label-header {
@@ -1738,8 +1788,15 @@ body {
 /* 1001-1050: Empty states and responsive design */
 .empty-state {
     text-align: center;
-    padding: 3rem 1rem;
+    padding: 2rem 1rem;
     color: var(--text-light);
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    min-height: 200px;
+    max-height: 350px;
 }
 
 .empty-state i {
@@ -1777,6 +1834,12 @@ body {
     .split-view {
         grid-template-columns: 1fr;
         gap: 1.5rem;
+    }
+    
+    .cards-container,
+    .labels-container {
+        min-height: 150px;
+        max-height: 60vh;
     }
     
     .nav-content {
@@ -2278,4 +2341,48 @@ body {
         padding: 0.6rem 1rem;
         font-size: 0.8rem;
     }
+}
+
+/* Specific adjustments for organized cards section */
+.labels-container {
+    justify-content: flex-start;
+}
+
+.labels-container:not(:empty) {
+    padding-bottom: 2rem;
+}
+
+/* When there are few label groups, don't stretch them too much */
+.labels-container .label-group {
+    flex-shrink: 0;
+}
+
+.labels-container .label-group:only-child {
+    margin-bottom: 0;
+}
+
+/* Drag instruction styles */
+.drag-instruction {
+    text-align: center;
+    padding: 0.75rem;
+    background: var(--secondary-bg);
+    border-radius: 8px;
+    color: var(--text-medium);
+    font-size: 0.85rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    border: 1px dashed var(--border-light);
+    transition: all var(--transition-fast);
+}
+
+.drag-instruction i {
+    color: var(--accent-primary);
+}
+
+.card-item:hover .drag-instruction {
+    background: var(--accent-light);
+    border-color: var(--accent-primary);
+    color: var(--text-dark);
 }

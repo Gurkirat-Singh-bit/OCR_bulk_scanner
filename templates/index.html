@@ -14,7 +14,7 @@
     <!-- Custom CSS -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v={{ moment().unix() if moment else '20250629' }}">>
 </head>
-<<body>
+<body>
     <!-- 11-20: Main container with light background -->
     <div class="main-container">
         
@@ -128,9 +128,14 @@
                 <section class="results-section card-light">
                     <div class="section-header">
                         <h2><i class="fas fa-history"></i> Recent Extractions</h2>
-                        <a href="{{ url_for('main.manage_data') }}" class="view-all-btn">
-                            <i class="fas fa-cogs"></i> Manage Data
-                        </a>
+                        <div class="section-actions">
+                            <button class="refresh-btn" id="refreshBtn" title="Refresh recent extractions">
+                                <i class="fas fa-sync-alt"></i> Refresh
+                            </button>
+                            <a href="{{ url_for('main.manage_data') }}" class="manage-data-btn">
+                                <i class="fas fa-cogs"></i> Manage Data
+                            </a>
+                        </div>
                     </div>
                     <div class="results-content" id="recentResults">
                         {% if recent_extractions %}
