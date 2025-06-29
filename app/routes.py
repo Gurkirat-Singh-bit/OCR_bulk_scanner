@@ -75,13 +75,17 @@ def upload_files():
                     # Extract structured data using Gemini Vision API
                     structured_data = extract_data_from_image_gemini(image_bytes)
                     
-                    # Add filename to the extracted data
-                    structured_data['filename'] = file.filename
-                    
                     # Only add to processed data if we got valid results
                     if any(structured_data.get(field, '').strip() for field in ['name', 'email', 'phone', 'company']):
-                        # Add to JSON data store
-                        record_id = add_extraction_record(structured_data)
+                        # Detect country and add management fields
+                        from app.mongo import detect_country_from_company, store_card_with_image
+                        country_code, flag = detect_country_from_company(structured_data.get('company', ''))
+                        structured_data['country'] = country_code
+                        structured_data['flag'] = flag
+                        structured_data['is_sorted'] = False  # New cards start as unsorted
+                        
+                        # Store card with image in MongoDB
+                        record_id = store_card_with_image(structured_data, image_bytes, file.filename)
                         structured_data['id'] = record_id
                         
                         processed_data.append(structured_data)
@@ -285,3 +289,160 @@ def api_upload():
             
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
+# 121-160: Data management interface routes
+@main_bp.route('/manage')
+def manage_data():
+    """
+    Render the data management interface
+    """
+    from app.mongo import get_all_labels, get_cards_by_status
+    
+    # Get unsorted and sorted cards
+    unsorted_cards = get_cards_by_status(is_sorted=False)
+    sorted_cards = get_cards_by_status(is_sorted=True)
+    labels = get_all_labels()
+    
+    return render_template('manage.html', 
+                         unsorted_cards=unsorted_cards,
+                         sorted_cards=sorted_cards,
+                         labels=labels)
+
+@main_bp.route('/api/labels', methods=['GET', 'POST'])
+def handle_labels():
+    """
+    Handle label operations (GET all labels, POST create new label)
+    """
+    if request.method == 'GET':
+        from app.mongo import get_all_labels
+        labels = get_all_labels()
+        return jsonify({'success': True, 'labels': labels})
+    
+    elif request.method == 'POST':
+        from app.mongo import create_label
+        data = request.get_json()
+        label_name = data.get('name', '').strip()
+        color = data.get('color', '#0891b2')
+        
+        if not label_name:
+            return jsonify({'success': False, 'message': 'Label name is required'})
+        
+        label = create_label(label_name, color)
+        if label:
+            return jsonify({'success': True, 'label': label})
+        else:
+            return jsonify({'success': False, 'message': 'Failed to create label'})
+
+@main_bp.route('/api/cards/<int:card_id>/label', methods=['POST', 'DELETE'])
+def handle_card_label(card_id):
+    """
+    Assign or remove label from a card
+    """
+    if request.method == 'POST':
+        from app.mongo import assign_label_to_card
+        data = request.get_json()
+        label_id = data.get('label_id')
+        label_name = data.get('label_name')
+        
+        if assign_label_to_card(card_id, label_id, label_name):
+            return jsonify({'success': True})
+        else:
+            return jsonify({'success': False, 'message': 'Failed to assign label'})
+    
+    elif request.method == 'DELETE':
+        from app.mongo import remove_label_from_card
+        if remove_label_from_card(card_id):
+            return jsonify({'success': True})
+        else:
+            return jsonify({'success': False, 'message': 'Failed to remove label'})
+
+@main_bp.route('/api/cards/search')
+def search_cards():
+    """
+    Search cards by query
+    """
+    from app.mongo import search_cards
+    query = request.args.get('q', '').strip()
+    
+    if not query:
+        return jsonify({'success': False, 'message': 'Search query is required'})
+    
+    cards = search_cards(query)
+    return jsonify({'success': True, 'cards': cards})
+
+@main_bp.route('/api/cards/<int:card_id>', methods=['PUT', 'DELETE'])
+def handle_card(card_id):
+    """
+    Update or delete a card
+    """
+    if request.method == 'PUT':
+        from app.mongo import update_extraction_record, detect_country_from_company
+        data = request.get_json()
+        
+        # Detect country if company is updated
+        if 'company' in data:
+            country_code, flag = detect_country_from_company(data['company'])
+            data['country'] = country_code
+            data['flag'] = flag
+        
+        if update_extraction_record(card_id, data):
+            return jsonify({'success': True})
+        else:
+            return jsonify({'success': False, 'message': 'Failed to update card'})
+    
+    elif request.method == 'DELETE':
+        from app.mongo import delete_extraction_record
+        if delete_extraction_record(card_id):
+            return jsonify({'success': True})
+        else:
+            return jsonify({'success': False, 'message': 'Failed to delete card'})
+
+@main_bp.route('/api/cards/by-label/<int:label_id>')
+def get_cards_by_label_api(label_id):
+    """
+    Get all cards with a specific label
+    """
+    from app.mongo import get_cards_by_label
+    cards = get_cards_by_label(label_id)
+    return jsonify({'success': True, 'cards': cards})
+
+@main_bp.route('/api/cards/<int:card_id>/preview')
+def get_card_preview(card_id):
+    """
+    Get complete card data including image for preview
+    """
+    from app.mongo import get_card_with_image
+    
+    card = get_card_with_image(card_id)
+    if card:
+        return jsonify({'success': True, 'card': card})
+    else:
+        return jsonify({'success': False, 'message': 'Card not found'})
+
+@main_bp.route('/api/cards/<int:card_id>/edit', methods=['PUT'])
+def update_card_preview(card_id):
+    """
+    Update card data from preview panel
+    """
+    from app.mongo import update_card_data
+    
+    data = request.get_json()
+    
+    # Validate required fields
+    allowed_fields = ['name', 'company', 'email', 'phone', 'website', 'designation', 'country', 'flag']
+    update_data = {k: v for k, v in data.items() if k in allowed_fields}
+    
+    if update_card_data(card_id, update_data):
+        return jsonify({'success': True, 'message': 'Card updated successfully'})
+    else:
+        return jsonify({'success': False, 'message': 'Failed to update card'})
+
+@main_bp.route('/api/countries')
+def get_countries():
+    """
+    Get all available countries and flags for selection
+    """
+    from app.mongo import get_all_country_flags
+    
+    countries = get_all_country_flags()
+    return jsonify({'success': True, 'countries': countries})

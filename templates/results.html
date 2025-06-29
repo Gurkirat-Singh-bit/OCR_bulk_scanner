@@ -8,17 +8,15 @@
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <!-- Font Awesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Custom CSS -->
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v={{ moment().unix() if moment else '20250629' }}">>
 </head>
 <body>
-    <!-- 11-20: Main container with animated background -->
+    <!-- 11-20: Main container with light background -->
     <div class="main-container">
-        <!-- Animated background particles -->
-        <div class="bg-particles"></div>
         
         <!-- Header section -->
         <header class="app-header fade-in">
@@ -29,7 +27,7 @@
         </header>
 
         <!-- 21-30: Navigation bar -->
-        <nav class="results-nav card-hover">
+        <nav class="results-nav card-light">
             <div class="nav-content">
                 <a href="{{ url_for('main.index') }}" class="back-btn">
                     <i class="fas fa-arrow-left"></i> Back to Upload
@@ -52,7 +50,7 @@
         <main class="results-main">
             {% if results and results|length > 0 %}
                 <!-- Results found -->
-                <section class="results-section card-hover">
+                <section class="results-section card-light">
                     <div class="section-header">
                         <h2><i class="fas fa-table"></i> Extracted Data</h2>
                         <div class="results-info">
@@ -98,6 +96,205 @@
                                         <button class="action-btn edit-btn" data-row-index="{{ loop.index0 }}" title="Edit">
                                             <i class="fas fa-edit"></i>
                                         </button>
+                                        <button class="action-btn save-btn" data-row-index="{{ loop.index0 }}" title="Save" style="display: none;">
+                                            <i class="fas fa-check"></i>
+                                        </button>
+                                        <button class="action-btn cancel-btn" data-row-index="{{ loop.index0 }}" title="Cancel" style="display: none;">
+                                            <i class="fas fa-times"></i>
+                                        </button>
+                                        <button class="action-btn delete-btn" data-row-index="{{ loop.index0 }}" title="Delete">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <!-- Download section -->
+                <div class="download-section">
+                    <a href="{{ url_for('main.download_excel') }}" class="download-btn">
+                        <i class="fas fa-download"></i> Download Excel File
+                    </a>
+                    <p class="download-info">Export all data to Excel format</p>
+                </div>
+
+            {% else %}
+                <!-- No results -->
+                <section class="no-results-section card-light">
+                    <div class="no-results">
+                        <i class="fas fa-inbox"></i>
+                        <h2>No Results Found</h2>
+                        <p>You haven't uploaded any business cards yet. Start by uploading some cards to see extracted data here.</p>
+                        <a href="{{ url_for('main.index') }}" class="portfolio-btn">
+                            <i class="fas fa-cloud-upload-alt"></i> Upload Cards
+                        </a>
+                    </div>
+                </section>
+            {% endif %}
+        </main>
+    </div>
+
+    <!-- Success notification toast -->
+    <div class="toast" id="successNotification">
+        <i class="fas fa-check-circle"></i>
+        <span>Operation completed successfully!</span>
+    </div>
+
+    <!-- Custom JavaScript -->
+    <script>
+        // Row editing functionality
+        function editRow(index) {
+            const row = document.querySelector(`tr[data-row="${index}"]`);
+            const contents = row.querySelectorAll('.cell-content');
+            const inputs = row.querySelectorAll('.edit-input');
+            const editBtn = row.querySelector('.edit-btn');
+            const saveBtn = row.querySelector('.save-btn');
+            const cancelBtn = row.querySelector('.cancel-btn');
+
+            contents.forEach(content => content.style.display = 'none');
+            inputs.forEach(input => input.style.display = 'block');
+            editBtn.style.display = 'none';
+            saveBtn.style.display = 'inline-block';
+            cancelBtn.style.display = 'inline-block';
+
+            if (inputs[0]) inputs[0].focus();
+        }
+
+        function saveRow(index) {
+            const row = document.querySelector(`tr[data-row="${index}"]`);
+            const contents = row.querySelectorAll('.cell-content');
+            const inputs = row.querySelectorAll('.edit-input');
+
+            inputs.forEach((input, i) => {
+                contents[i].textContent = input.value || 'N/A';
+            });
+
+            cancelEdit(index);
+            showNotification('Row updated successfully!');
+        }
+
+        function cancelEdit(index) {
+            const row = document.querySelector(`tr[data-row="${index}"]`);
+            const contents = row.querySelectorAll('.cell-content');
+            const inputs = row.querySelectorAll('.edit-input');
+            const editBtn = row.querySelector('.edit-btn');
+            const saveBtn = row.querySelector('.save-btn');
+            const cancelBtn = row.querySelector('.cancel-btn');
+
+            contents.forEach(content => content.style.display = 'block');
+            inputs.forEach(input => input.style.display = 'none');
+            editBtn.style.display = 'inline-block';
+            saveBtn.style.display = 'none';
+            cancelBtn.style.display = 'none';
+        }
+
+        function deleteRow(index) {
+            if (confirm('Are you sure you want to delete this record?')) {
+                const row = document.querySelector(`tr[data-row="${index}"]`);
+                row.style.animation = 'fadeOut 0.3s ease-out';
+                setTimeout(() => {
+                    row.remove();
+                    updateRowNumbers();
+                    showNotification('Record deleted!');
+                }, 300);
+            }
+        }
+
+        function updateRowNumbers() {
+            const rows = document.querySelectorAll('.data-row');
+            rows.forEach((row, index) => {
+                const numberCell = row.querySelector('.row-number');
+                if (numberCell) {
+                    numberCell.textContent = index + 1;
+                }
+                row.setAttribute('data-row', index);
+            });
+        }
+
+        function exportToCSV() {
+            const table = document.getElementById('resultsTable');
+            if (!table) return;
+
+            let csv = [];
+            
+            const headers = Array.from(table.querySelectorAll('th')).slice(1, -1);
+            csv.push(headers.map(th => th.textContent.replace(/\s+/g, ' ').trim().split(' ').slice(1).join(' ')).join(','));
+            
+            const rows = table.querySelectorAll('tbody tr');
+            rows.forEach(row => {
+                const cells = Array.from(row.querySelectorAll('td')).slice(1, -1);
+                const rowData = cells.map(td => {
+                    const content = td.querySelector('.cell-content').textContent.trim();
+                    return content === 'N/A' ? '' : `"${content.replace(/"/g, '""')}"`;
+                });
+                csv.push(rowData.join(','));
+            });
+            
+            const csvContent = csv.join('\n');
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            const url = URL.createObjectURL(blob);
+            link.setAttribute('href', url);
+            link.setAttribute('download', 'visiting_cards_export.csv');
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            
+            showNotification('CSV exported successfully!');
+        }
+
+        function printResults() {
+            window.print();
+        }
+
+        function refreshResults() {
+            location.reload();
+        }
+
+        function showNotification(message) {
+            const toast = document.getElementById('successNotification');
+            if (toast) {
+                toast.querySelector('span').textContent = message;
+                toast.style.display = 'flex';
+                setTimeout(() => {
+                    toast.style.display = 'none';
+                }, 3000);
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            document.addEventListener('click', function(e) {
+                if (e.target.closest('.edit-btn')) {
+                    const rowIndex = e.target.closest('.edit-btn').dataset.rowIndex;
+                    editRow(rowIndex);
+                } else if (e.target.closest('.save-btn')) {
+                    const rowIndex = e.target.closest('.save-btn').dataset.rowIndex;
+                    saveRow(rowIndex);
+                } else if (e.target.closest('.cancel-btn')) {
+                    const rowIndex = e.target.closest('.cancel-btn').dataset.rowIndex;
+                    cancelEdit(rowIndex);
+                } else if (e.target.closest('.delete-btn')) {
+                    const rowIndex = e.target.closest('.delete-btn').dataset.rowIndex;
+                    deleteRow(rowIndex);
+                }
+            });
+
+            const style = document.createElement('style');
+            style.textContent = `
+                @keyframes fadeOut {
+                    from { opacity: 1; transform: scale(1); }
+                    to { opacity: 0; transform: scale(0.95); }
+                }
+            `;
+            document.head.appendChild(style);
+        });
+    </script>
+</body>
+</html>
                                         <button class="action-btn save-btn" data-row-index="{{ loop.index0 }}" title="Save" style="display: none;">
                                             <i class="fas fa-save"></i>
                                         </button>

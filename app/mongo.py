@@ -4,6 +4,9 @@ import time
 from datetime import datetime
 from pymongo import MongoClient, ASCENDING
 from dotenv import load_dotenv
+import base64
+import io
+from PIL import Image
 
 # Load environment variables
 load_dotenv()
@@ -215,3 +218,361 @@ def is_duplicate_record(name, email, phone):
     except Exception as e:
         print(f"❌ Error checking for duplicates: {str(e)}")
         return False
+
+# 101-120: Label management functions
+def create_label(label_name, color="#0891b2"):
+    """
+    Create a new label for organizing cards
+    Returns the created label document
+    """
+    try:
+        label_data = {
+            "id": int(time.time() * 1000),
+            "name": label_name,
+            "color": color,
+            "created_at": datetime.now(),
+            "card_count": 0
+        }
+        
+        # Insert into labels collection
+        labels_collection = collection.database['labels']
+        result = labels_collection.insert_one(label_data)
+        
+        if result.inserted_id:
+            print(f"✅ Label '{label_name}' created successfully")
+            return label_data
+        
+        return None
+        
+    except Exception as e:
+        print(f"❌ Error creating label: {str(e)}")
+        return None
+
+def get_all_labels():
+    """
+    Get all available labels
+    Returns list of label documents
+    """
+    try:
+        labels_collection = collection.database['labels']
+        labels = list(labels_collection.find({}, {'_id': 0}).sort('name', 1))
+        return labels
+        
+    except Exception as e:
+        print(f"❌ Error getting labels: {str(e)}")
+        return []
+
+def update_label_card_count(label_id, count_change):
+    """
+    Update the card count for a label
+    """
+    try:
+        labels_collection = collection.database['labels']
+        labels_collection.update_one(
+            {'id': label_id},
+            {'$inc': {'card_count': count_change}}
+        )
+        
+    except Exception as e:
+        print(f"❌ Error updating label count: {str(e)}")
+
+def assign_label_to_card(record_id, label_id, label_name):
+    """
+    Assign a label to a card
+    Returns True if successful
+    """
+    try:
+        result = collection.update_one(
+            {'id': record_id},
+            {
+                '$set': {
+                    'label_id': label_id,
+                    'label_name': label_name,
+                    'is_sorted': True,
+                    'updated_at': datetime.now()
+                }
+            }
+        )
+        
+        if result.modified_count > 0:
+            update_label_card_count(label_id, 1)
+            print(f"✅ Label assigned to card {record_id}")
+            return True
+        
+        return False
+        
+    except Exception as e:
+        print(f"❌ Error assigning label: {str(e)}")
+        return False
+
+def remove_label_from_card(record_id):
+    """
+    Remove label from a card (move to unsorted)
+    Returns True if successful
+    """
+    try:
+        # Get current label to update count
+        card = collection.find_one({'id': record_id})
+        if card and 'label_id' in card:
+            update_label_card_count(card['label_id'], -1)
+        
+        result = collection.update_one(
+            {'id': record_id},
+            {
+                '$unset': {
+                    'label_id': '',
+                    'label_name': ''
+                },
+                '$set': {
+                    'is_sorted': False,
+                    'updated_at': datetime.now()
+                }
+            }
+        )
+        
+        return result.modified_count > 0
+        
+    except Exception as e:
+        print(f"❌ Error removing label: {str(e)}")
+        return False
+
+# 121-140: Card filtering and grouping functions
+def get_cards_by_status(is_sorted=None):
+    """
+    Get cards by sorted status
+    Returns list of cards
+    """
+    try:
+        query = {}
+        if is_sorted is not None:
+            query['is_sorted'] = is_sorted
+        
+        cards = list(collection.find(query, {'_id': 0}).sort('created_at', -1))
+        return cards
+        
+    except Exception as e:
+        print(f"❌ Error getting cards by status: {str(e)}")
+        return []
+
+def get_cards_by_label(label_id):
+    """
+    Get all cards with a specific label
+    Returns list of cards
+    """
+    try:
+        cards = list(collection.find(
+            {'label_id': label_id}, 
+            {'_id': 0}
+        ).sort('created_at', -1))
+        
+        return cards
+        
+    except Exception as e:
+        print(f"❌ Error getting cards by label: {str(e)}")
+        return []
+
+def search_cards(query_text):
+    """
+    Search cards by name, company, email, or phone
+    Returns list of matching cards
+    """
+    try:
+        search_query = {
+            '$or': [
+                {'name': {'$regex': query_text, '$options': 'i'}},
+                {'company': {'$regex': query_text, '$options': 'i'}},
+                {'email': {'$regex': query_text, '$options': 'i'}},
+                {'phone': {'$regex': query_text, '$options': 'i'}},
+                {'country': {'$regex': query_text, '$options': 'i'}}
+            ]
+        }
+        
+        cards = list(collection.find(search_query, {'_id': 0}).sort('created_at', -1))
+        return cards
+        
+    except Exception as e:
+        print(f"❌ Error searching cards: {str(e)}")
+        return []
+
+# 141-160: Country detection function
+def detect_country_from_company(company_name):
+    """
+    Simple country detection based on company name patterns
+    Returns country code and flag emoji
+    """
+    country_mapping = {
+        # Common patterns for country detection
+        'pvt ltd': ('IN', '🇮🇳'),
+        'private limited': ('IN', '🇮🇳'), 
+        'ltd': ('GB', '🇬🇧'),
+        'limited': ('GB', '🇬🇧'),
+        'inc': ('US', '🇺🇸'),
+        'incorporated': ('US', '🇺🇸'),
+        'llc': ('US', '🇺🇸'),
+        'corp': ('US', '🇺🇸'),
+        'gmbh': ('DE', '🇩🇪'),
+        'sarl': ('FR', '🇫🇷'),
+        'spa': ('IT', '🇮🇹'),
+        'bv': ('NL', '🇳🇱'),
+        'ab': ('SE', '🇸🇪'),
+        'pty': ('AU', '🇦🇺'),
+        'technologies': ('IN', '🇮🇳'),
+        'tech': ('US', '🇺🇸'),
+        'solutions': ('IN', '🇮🇳'),
+        'consulting': ('US', '🇺🇸'),
+        'systems': ('US', '🇺🇸')
+    }
+    
+    if not company_name:
+        return 'UNKNOWN', '🌍'
+    
+    company_lower = company_name.lower()
+    
+    for pattern, (country_code, flag) in country_mapping.items():
+        if pattern in company_lower:
+            return country_code, flag
+    
+    # Default fallback
+    return 'UNKNOWN', '🌍'
+
+# 161-200: Image storage and card preview functions
+def store_card_with_image(extracted_data, image_bytes, filename):
+    """
+    Store card data along with image in MongoDB
+    Returns the record ID if successful
+    """
+    try:
+        # Convert image to base64
+        image_base64 = base64.b64encode(image_bytes).decode('utf-8')
+        image_data_uri = f"data:image/jpeg;base64,{image_base64}"
+        
+        # Create record with image
+        record_id = int(time.time() * 1000)
+        record_data = {
+            'id': record_id,
+            'card_id': str(record_id),  # String version for easier lookup
+            'filename': filename,
+            'image_base64': image_data_uri,
+            'name': extracted_data.get('name', ''),
+            'company': extracted_data.get('company', ''),
+            'email': extracted_data.get('email', ''),
+            'phone': extracted_data.get('phone', ''),
+            'website': extracted_data.get('website', ''),
+            'designation': extracted_data.get('designation', ''),
+            'country': extracted_data.get('country', 'UNKNOWN'),
+            'flag': extracted_data.get('flag', '🌍'),
+            'is_sorted': extracted_data.get('is_sorted', False),
+            'label_id': extracted_data.get('label_id'),
+            'label_name': extracted_data.get('label_name'),
+            'timestamp': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+            'created_at': datetime.now(),
+            'updated_at': datetime.now()
+        }
+        
+        # Insert into MongoDB
+        result = collection.insert_one(record_data)
+        
+        if result.inserted_id:
+            print(f"✅ Card with image stored in MongoDB: {record_id}")
+            return record_id
+        else:
+            print(f"❌ Failed to store card with image")
+            return None
+            
+    except Exception as e:
+        print(f"❌ Error storing card with image: {str(e)}")
+        return None
+
+def get_card_with_image(card_id):
+    """
+    Retrieve card data including image by card_id
+    Returns complete card document
+    """
+    try:
+        # Try to find by id field first, then by card_id field
+        card = collection.find_one({'id': card_id}, {'_id': 0})
+        if not card:
+            card = collection.find_one({'card_id': str(card_id)}, {'_id': 0})
+        
+        if card:
+            print(f"✅ Retrieved card with image: {card_id}")
+            return card
+        else:
+            print(f"⚠️ Card not found: {card_id}")
+            return None
+            
+    except Exception as e:
+        print(f"❌ Error retrieving card: {str(e)}")
+        return None
+
+def update_card_data(card_id, updated_fields):
+    """
+    Update card data while preserving image
+    Returns True if successful
+    """
+    try:
+        # Add updated timestamp
+        updated_fields['updated_at'] = datetime.now()
+        
+        # If country is updated, detect flag
+        if 'country' in updated_fields or 'company' in updated_fields:
+            company = updated_fields.get('company', '')
+            if not company:
+                # Get existing company if not provided
+                existing_card = get_card_with_image(card_id)
+                if existing_card:
+                    company = existing_card.get('company', '')
+            
+            country_code, flag = detect_country_from_company(company)
+            updated_fields['country'] = country_code
+            updated_fields['flag'] = flag
+        
+        # Update the record
+        result = collection.update_one(
+            {'id': card_id},
+            {'$set': updated_fields}
+        )
+        
+        if result.modified_count > 0:
+            print(f"✅ Card data updated: {card_id}")
+            return True
+        else:
+            print(f"⚠️ No changes made to card: {card_id}")
+            return False
+            
+    except Exception as e:
+        print(f"❌ Error updating card data: {str(e)}")
+        return False
+
+def get_all_country_flags():
+    """
+    Get all unique country flags from the database
+    Returns list of (country_code, flag) tuples
+    """
+    try:
+        pipeline = [
+            {'$group': {'_id': '$country', 'flag': {'$first': '$flag'}}},
+            {'$match': {'_id': {'$ne': None, '$ne': ''}}},
+            {'$sort': {'_id': 1}}
+        ]
+        
+        results = list(collection.aggregate(pipeline))
+        countries = [(result['_id'], result['flag']) for result in results if result['_id'] and result['flag']]
+        
+        # Add some common countries if not present
+        common_countries = [
+            ('US', '🇺🇸'), ('IN', '🇮🇳'), ('GB', '🇬🇧'), ('DE', '🇩🇪'), 
+            ('FR', '🇫🇷'), ('CA', '🇨🇦'), ('AU', '🇦🇺'), ('JP', '🇯🇵'),
+            ('CN', '🇨🇳'), ('BR', '🇧🇷'), ('UNKNOWN', '🌍')
+        ]
+        
+        existing_codes = [c[0] for c in countries]
+        for code, flag in common_countries:
+            if code not in existing_codes:
+                countries.append((code, flag))
+        
+        return sorted(countries, key=lambda x: x[0] or '')
+        
+    except Exception as e:
+        print(f"❌ Error getting country flags: {str(e)}")
+        return [('UNKNOWN', '🌍')]

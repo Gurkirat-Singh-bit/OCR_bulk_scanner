@@ -8,17 +8,15 @@
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <!-- Font Awesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Custom CSS -->
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v={{ moment().unix() if moment else '20250629' }}">>
 </head>
-<body>
-    <!-- 11-20: Main container with animated background -->
+<<body>
+    <!-- 11-20: Main container with light background -->
     <div class="main-container">
-        <!-- Animated background particles -->
-        <div class="bg-particles"></div>
         
         <!-- Header section -->
         <header class="app-header fade-in">
@@ -48,7 +46,7 @@
             <div class="content-grid">
                 
                 <!-- Upload section (top-left, large) -->
-                <section class="upload-section card-hover">
+                <section class="upload-section card-light">
                     <div class="section-header">
                         <h2><i class="fas fa-cloud-upload-alt"></i> Upload Business Cards</h2>
                     </div>
@@ -92,7 +90,7 @@
                 </section>
 
                 <!-- How it works section (top-right) -->
-                <section class="info-section card-hover">
+                <section class="info-section card-light">
                     <div class="section-header">
                         <h2><i class="fas fa-lightbulb"></i> How It Works</h2>
                     </div>
@@ -127,11 +125,11 @@
                 </section>
 
                 <!-- Previous results section (bottom-left) -->
-                <section class="results-section card-hover">
+                <section class="results-section card-light">
                     <div class="section-header">
                         <h2><i class="fas fa-history"></i> Recent Extractions</h2>
-                        <a href="{{ url_for('main.view_results') }}" class="view-all-btn">
-                            <i class="fas fa-external-link-alt"></i> View All
+                        <a href="{{ url_for('main.manage_data') }}" class="view-all-btn">
+                            <i class="fas fa-cogs"></i> Manage Data
                         </a>
                     </div>
                     <div class="results-content" id="recentResults">
@@ -179,7 +177,7 @@
                 </section>
 
                 <!-- Footer/Portfolio section (bottom-right) -->
-                <section class="portfolio-section card-hover">
+                <section class="portfolio-section card-light">
                     <div class="portfolio-content">
                         <div class="logo-section">
                             <div class="logo-placeholder">
