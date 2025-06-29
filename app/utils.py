@@ -1,8 +1,10 @@
 # 1-10: Importing modules
 import os  # OS module for file operations
-from openpyxl import Workbook, load_workbook  # Excel file handling
+from openpyxl import Workbook  # Excel file handling
 from werkzeug.utils import secure_filename  # Secure filename utility
 import uuid  # UUID for generating unique filenames
+from io import BytesIO  # For in-memory file handling
+from app.mongo import load_extraction_data  # Import MongoDB data loading function
 
 # 11-20: File validation configuration
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'webp'}  # Supported image formats only
@@ -37,95 +39,60 @@ def save_uploaded_file(file, upload_folder):
     
     return None  # Return None if file is invalid
 
-def save_to_excel(data_list, excel_filename='output.xlsx'):
+def generate_excel_from_mongo():
     """
-    51-80: Save extracted data to Excel file (append mode with duplicate checking)
+    51-80: Generate Excel file in memory from MongoDB data (no local file storage)
+    Returns BytesIO object containing Excel data for direct download
     """
-    print(f"💾 Saving {len(data_list)} records to Excel...")
-    
-    # Get absolute path for Excel file (save in static/results/)
-    if not os.path.isabs(excel_filename):
-        project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-        excel_filename = os.path.join(project_root, 'static', 'results', excel_filename)
-    
-    print(f"📁 Excel file path: {excel_filename}")
+    print("� Generating Excel file from MongoDB data...")
     
     try:
-        existing_data = []
+        # Load all data from MongoDB
+        data_list = load_extraction_data()
         
-        # Check if Excel file exists
-        if os.path.exists(excel_filename):
-            print("📖 Loading existing Excel file...")
-            workbook = load_workbook(excel_filename)
-            worksheet = workbook.active
-            
-            # Read existing data to check for duplicates
-            for row in worksheet.iter_rows(min_row=2, values_only=True):
-                if any(row):  # Skip empty rows
-                    existing_data.append({
-                        'name': row[0] or '',
-                        'phone': row[1] or '',
-                        'email': row[2] or '',
-                        'company': row[3] or '',
-                        'website': row[4] or '',
-                        'address': row[5] or '' if len(row) > 5 else '',
-                        'filename': row[6] or '' if len(row) > 6 else ''
-                    })
-        else:
-            print("📝 Creating new Excel file...")
-            workbook = Workbook()
-            worksheet = workbook.active
-            
-            # Add comprehensive headers for new file
-            headers = ['Name', 'Phone', 'Email', 'Company', 'Website', 'Address', 'Filename']
-            worksheet.append(headers)
-            print("✅ Headers added to new Excel file")
+        if not data_list:
+            print("⚠️ No data found in MongoDB")
+            return None
         
-        # Append new data rows (skip duplicates)
+        # Create new workbook in memory
+        workbook = Workbook()
+        worksheet = workbook.active
+        
+        # Add comprehensive headers
+        headers = ['Name', 'Phone', 'Email', 'Company', 'Website', 'Address', 'Filename', 'Timestamp']
+        worksheet.append(headers)
+        print("✅ Headers added to Excel file")
+        
+        # Add data rows
         rows_added = 0
-        skipped_duplicates = 0
-        
         for data in data_list:
-            # Check for duplicates based on name and phone/email
-            is_duplicate = False
-            for existing in existing_data:
-                if (data.get('name', '').lower() == existing['name'].lower() and 
-                    (data.get('phone', '') == existing['phone'] or 
-                     data.get('email', '').lower() == existing['email'].lower()) and
-                    existing['name']):  # Only if existing name is not empty
-                    is_duplicate = True
-                    break
-            
-            if not is_duplicate:
-                row_data = [
-                    data.get('name', ''),
-                    data.get('phone', ''),
-                    data.get('email', ''),
-                    data.get('company', ''),
-                    data.get('website', ''),
-                    data.get('address', ''),
-                    data.get('filename', '')
-                ]
-                worksheet.append(row_data)
-                rows_added += 1
-                print(f"✅ Added row {rows_added}: {data.get('name', 'Unknown')}")
-            else:
-                skipped_duplicates += 1
-                print(f"⚠️ Skipped duplicate: {data.get('name', 'Unknown')}")
+            row_data = [
+                data.get('name', ''),
+                data.get('phone', ''),
+                data.get('email', ''),
+                data.get('company', ''),
+                data.get('website', ''),
+                data.get('address', ''),
+                data.get('filename', ''),
+                data.get('timestamp', '')
+            ]
+            worksheet.append(row_data)
+            rows_added += 1
         
-        # Save workbook
-        workbook.save(excel_filename)
+        # Save to BytesIO object (in memory)
+        excel_buffer = BytesIO()
+        workbook.save(excel_buffer)
         workbook.close()
         
-        if skipped_duplicates > 0:
-            print(f"💾 Successfully saved {rows_added} new rows, skipped {skipped_duplicates} duplicates")
-        else:
-            print(f"💾 Successfully saved {rows_added} rows to {excel_filename}")
-        return True
+        # Reset buffer position to beginning
+        excel_buffer.seek(0)
+        
+        print(f"💾 Successfully generated Excel with {rows_added} rows in memory")
+        return excel_buffer
         
     except Exception as e:
-        print(f"❌ Error saving to Excel: {str(e)}")
-        return False
+        print(f"❌ Error generating Excel: {str(e)}")
+        return None
 
 def cleanup_temp_files(file_paths):
     """
@@ -136,13 +103,13 @@ def cleanup_temp_files(file_paths):
             # Remove file if it exists
             if os.path.exists(file_path):
                 os.remove(file_path)
-                print(f"Cleaned up temporary file: {file_path}")
+                print(f"🧹 Cleaned up temporary file: {file_path}")
         except Exception as e:
-            print(f"Error cleaning up file {file_path}: {str(e)}")
+            print(f"❌ Error cleaning up file {file_path}: {str(e)}")
 
 def validate_extracted_data(data):
     """
-    101-120: Validate extracted data before saving
+    101-120: Validate extracted data before saving to MongoDB
     """
     # Check if at least name or email or phone is present
     required_fields = ['name', 'email', 'phone']

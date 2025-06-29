@@ -2,8 +2,9 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify, current_app, send_file
 import os
 import time
-from app.ocr import extract_data_from_image_gemini, load_extraction_data, save_extraction_data, add_extraction_record, update_extraction_record, delete_extraction_record
-from app.utils import save_uploaded_file, save_to_excel, cleanup_temp_files, allowed_file
+from app.ocr import extract_data_from_image_gemini
+from app.mongo import load_extraction_data, add_extraction_record, update_extraction_record, delete_extraction_record, get_recent_extractions
+from app.utils import save_uploaded_file, generate_excel_from_mongo, cleanup_temp_files, allowed_file
 
 # 11-20: Blueprint creation
 main_bp = Blueprint('main', __name__)
@@ -11,12 +12,10 @@ main_bp = Blueprint('main', __name__)
 @main_bp.route('/')
 def index():
     """
-    21-30: Home page route - render file upload form with recent extractions
+    21-30: Home page route - render file upload form with recent extractions from MongoDB
     """
-    # Get recent extractions from JSON data
-    all_data = load_extraction_data()
-    recent_extractions = all_data[-5:] if len(all_data) > 5 else all_data
-    recent_extractions.reverse()  # Show most recent first
+    # Get recent extractions from MongoDB
+    recent_extractions = get_recent_extractions(limit=5)
     
     return render_template('index.html', recent_extractions=recent_extractions)
 
@@ -101,15 +100,12 @@ def upload_files():
     if skipped_files:
         flash(f'Skipped {len(skipped_files)} unsupported files: {", ".join(skipped_files[:5])}{"..." if len(skipped_files) > 5 else ""}. Please upload PNG, JPG, JPEG, or WEBP only.', 'warning')
     
-    # Save to Excel if we have processed data
+    # Display success message if we have processed data
     if processed_data:
-        if save_to_excel(processed_data):
-            success_msg = f'Successfully processed {len(processed_data)} visiting cards using Gemini AI'
-            if skipped_files:
-                success_msg += f' ({len(skipped_files)} files skipped)'
-            flash(success_msg, 'success')
-        else:
-            flash('Error saving data to Excel file', 'error')
+        success_msg = f'Successfully processed {len(processed_data)} visiting cards using Gemini AI and saved to MongoDB'
+        if skipped_files:
+            success_msg += f' ({len(skipped_files)} files skipped)'
+        flash(success_msg, 'success')
     else:
         if not skipped_files:
             flash('No valid data extracted from any uploaded files', 'error')
@@ -126,12 +122,12 @@ def upload_files():
 @main_bp.route('/results')
 def view_results():
     """
-    121-140: View all extracted results from JSON data
+    121-140: View all extracted results from MongoDB
     """
     try:
-        # Load all data from JSON
+        # Load all data from MongoDB
         results = load_extraction_data()
-        print(f"📊 Loaded {len(results)} records from JSON data")
+        print(f"📊 Loaded {len(results)} records from MongoDB")
         
         # Render results page with data
         return render_template('results.html', results=results)
@@ -144,13 +140,11 @@ def view_results():
 @main_bp.route('/api/recent')
 def api_recent_extractions():
     """
-    141-160: API endpoint to get recent extractions for AJAX updates
+    141-160: API endpoint to get recent extractions from MongoDB for AJAX updates
     """
     try:
-        # Load all data and get recent 5
-        all_data = load_extraction_data()
-        recent_extractions = all_data[-5:] if len(all_data) > 5 else all_data
-        recent_extractions.reverse()  # Show most recent first
+        # Get recent extractions from MongoDB
+        recent_extractions = get_recent_extractions(limit=5)
         
         return jsonify({
             'success': True,
@@ -206,26 +200,24 @@ def delete_record(record_id):
 @main_bp.route('/download')
 def download_excel():
     """
-    201-220: Route to download the Excel file
+    201-220: Route to generate and download Excel file from MongoDB data (no local storage)
     """
     try:
-        # Get absolute path for Excel file
-        project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-        excel_path = os.path.join(project_root, 'static', 'results', 'output.xlsx')
+        print("📥 Download request for Excel file from MongoDB")
         
-        print(f"📥 Download request for Excel file: {excel_path}")
+        # Generate Excel file in memory from MongoDB data
+        excel_buffer = generate_excel_from_mongo()
         
-        # Check if Excel file exists
-        if os.path.exists(excel_path):
+        if excel_buffer:
             print("✅ Sending Excel file to user")
             return send_file(
-                excel_path, 
+                excel_buffer, 
                 as_attachment=True, 
                 download_name='visiting_cards_data.xlsx',
                 mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
             )
         else:
-            print("❌ Excel file not found")
+            print("❌ No data available for download")
             flash('No data available for download. Please process some cards first.', 'warning')
             return redirect(url_for('main.index'))
             
@@ -283,10 +275,9 @@ def api_upload():
                         cleanup_temp_files([file_path])
         
         if processed_data:
-            save_to_excel(processed_data)
             return jsonify({
                 'success': True,
-                'message': f'Processed {len(processed_data)} files using Gemini AI',
+                'message': f'Processed {len(processed_data)} files using Gemini AI and saved to MongoDB',
                 'data': processed_data
             })
         else:

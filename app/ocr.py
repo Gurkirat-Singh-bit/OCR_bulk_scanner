@@ -6,6 +6,7 @@ import json
 from dotenv import load_dotenv
 from PIL import Image, ImageOps
 from io import BytesIO
+from app.mongo import add_extraction_record, load_extraction_data, update_extraction_record, delete_extraction_record
 
 # 11-20: Load environment variables
 load_dotenv()
@@ -81,73 +82,12 @@ def extract_data_from_image_gemini(image_bytes):
         print(f"❌ Gemini API Error: {e}")
         return {"name": "", "phone": "", "email": "", "company": ""}
 
-# 61-120: Data persistence functions for JSON storage
-def get_data_file_path():
-    """Get the absolute path to data.json file"""
-    project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    return os.path.join(project_root, 'static', 'results', 'data.json')
+# 61-100: MongoDB data persistence functions (imported from mongo.py)
+# All data persistence functions are now imported from app.mongo module:
+# - add_extraction_record(record) 
+# - load_extraction_data()
+# - update_extraction_record(record_id, updated_record)
+# - delete_extraction_record(record_id)
 
-def load_extraction_data():
-    """Load all extraction data from JSON file"""
-    data_file = get_data_file_path()
-    try:
-        if os.path.exists(data_file):
-            with open(data_file, 'r', encoding='utf-8') as f:
-                return json.load(f)
-        return []
-    except Exception as e:
-        print(f"❌ Error loading data: {e}")
-        return []
-
-def save_extraction_data(data_list):
-    """Save extraction data to JSON file"""
-    data_file = get_data_file_path()
-    try:
-        # Ensure directory exists
-        os.makedirs(os.path.dirname(data_file), exist_ok=True)
-        
-        with open(data_file, 'w', encoding='utf-8') as f:
-            json.dump(data_list, f, indent=2, ensure_ascii=False)
-        print(f"✅ Data saved to {data_file}")
-        return True
-    except Exception as e:
-        print(f"❌ Error saving data: {e}")
-        return False
-
-def add_extraction_record(record):
-    """Add a new extraction record to the data file"""
-    data = load_extraction_data()
-    
-    # Add unique ID and timestamp
-    import time
-    record['id'] = int(time.time() * 1000)  # Unique timestamp ID
-    record['timestamp'] = time.strftime('%Y-%m-%d %H:%M:%S')
-    
-    data.append(record)
-    save_extraction_data(data)
-    return record['id']
-
-def update_extraction_record(record_id, updated_record):
-    """Update an existing extraction record"""
-    data = load_extraction_data()
-    
-    for i, record in enumerate(data):
-        if record.get('id') == record_id:
-            # Keep original ID and timestamp
-            updated_record['id'] = record['id']
-            updated_record['timestamp'] = record['timestamp']
-            data[i] = updated_record
-            save_extraction_data(data)
-            return True
-    return False
-
-def delete_extraction_record(record_id):
-    """Delete an extraction record"""
-    data = load_extraction_data()
-    
-    for i, record in enumerate(data):
-        if record.get('id') == record_id:
-            del data[i]
-            save_extraction_data(data)
-            return True
-    return False
+# These functions now store data in MongoDB instead of local JSON files
+# No local file storage is used - all data flows through MongoDB
