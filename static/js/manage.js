@@ -1911,15 +1911,10 @@ function showPreviewPanel(card) {
 function populatePreviewData(card) {
     // Set image
     const previewImage = document.getElementById('previewImage');
-    const previewFilename = document.getElementById('previewFilename');
     
     if (previewImage && card.image_base64) {
         previewImage.src = card.image_base64;
         previewImage.alt = `Business card for ${card.name || 'Unknown'}`;
-    }
-    
-    if (previewFilename) {
-        previewFilename.textContent = card.filename || 'Unknown file';
     }
     
     // Populate card information section
@@ -2362,7 +2357,7 @@ document.addEventListener('keydown', function(e) {
 // Image Modal Functions
 function openImageModal() {
     const previewImage = document.getElementById('previewImage');
-    const previewFilename = document.getElementById('previewFilename');
+    const previewImage = document.getElementById('previewImage');
     const modalImage = document.getElementById('modalImage');
     const modalFilename = document.getElementById('modalImageFilename');
     const imageModal = document.getElementById('imageModal');
@@ -2371,8 +2366,8 @@ function openImageModal() {
         modalImage.src = previewImage.src;
         modalImage.alt = previewImage.alt;
         
-        if (previewFilename && modalFilename) {
-            modalFilename.textContent = previewFilename.textContent;
+        if (modalFilename) {
+            modalFilename.textContent = 'Business Card Image';
         }
         
         imageModal.classList.add('show');
