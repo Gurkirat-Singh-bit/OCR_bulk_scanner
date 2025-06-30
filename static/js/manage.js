@@ -1922,7 +1922,10 @@ function populatePreviewData(card) {
         previewFilename.textContent = card.filename || 'Unknown file';
     }
     
-    // Set form fields with fallback values
+    // Populate card information section
+    populateCardInfo(card);
+    
+    // Set form fields with fallback values (for edit mode if it exists)
     setFieldValue('previewName', card.name || 'N/A');
     setFieldValue('previewCompany', card.company || 'N/A');
     setFieldValue('previewDesignation', card.designation || 'N/A');
@@ -1941,6 +1944,44 @@ function populatePreviewData(card) {
     if (flagDisplay) {
         flagDisplay.textContent = card.flag || '🌍';
     }
+}
+
+function populateCardInfo(card) {
+    // Update card name and flag in header
+    const cardName = document.getElementById('previewCardName');
+    const cardFlag = document.getElementById('previewCardFlag');
+    
+    if (cardName) {
+        cardName.textContent = card.name || 'Unknown Name';
+    }
+    
+    if (cardFlag) {
+        cardFlag.textContent = card.flag || '🌍';
+    }
+    
+    // Helper function to show/hide info items based on data availability
+    function updateInfoItem(itemId, fieldId, value) {
+        const item = document.getElementById(itemId);
+        const field = document.getElementById(fieldId);
+        
+        if (item && field) {
+            if (value && value.trim() && value.trim() !== 'N/A') {
+                field.textContent = value.trim();
+                item.classList.remove('hidden');
+            } else {
+                item.classList.add('hidden');
+            }
+        }
+    }
+    
+    // Update each field, hiding empty ones
+    updateInfoItem('previewCompanyItem', 'previewCardCompany', card.company);
+    updateInfoItem('previewEmailItem', 'previewCardEmail', card.email);
+    updateInfoItem('previewPhoneItem', 'previewCardPhone', card.phone);
+    updateInfoItem('previewWebsiteItem', 'previewCardWebsite', card.website);
+    updateInfoItem('previewDesignationItem', 'previewCardDesignation', card.designation);
+    
+    console.log('✅ Card info populated for:', card.name || 'Unknown');
 }
 
 function setFieldValue(fieldId, value) {

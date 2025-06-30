@@ -2825,3 +2825,167 @@ body {
 .manage-content.normal-view .card-item::before {
     display: block;
 }
+
+/* Preview Loaded Content Scrollable */
+.preview-loaded {
+    flex: 1;
+    overflow-y: auto;
+    padding: 1.5rem;
+    scrollbar-width: thin;
+    scrollbar-color: var(--accent-primary) transparent;
+}
+
+.preview-loaded::-webkit-scrollbar {
+    width: 6px;
+}
+
+.preview-loaded::-webkit-scrollbar-track {
+    background: var(--border-light);
+    border-radius: 3px;
+}
+
+.preview-loaded::-webkit-scrollbar-thumb {
+    background: var(--accent-primary);
+    border-radius: 3px;
+}
+
+.preview-loaded::-webkit-scrollbar-thumb:hover {
+    background: var(--accent-secondary);
+}
+
+/* Preview Card Information Styling */
+.preview-card-info {
+    margin-top: 1rem;
+    margin-bottom: 1rem;
+    padding: 1rem;
+    background: var(--white);
+    border-radius: 8px;
+    border: 1px solid var(--border-light);
+    box-shadow: var(--shadow-soft);
+    flex-shrink: 0;
+}
+
+.card-info-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.75rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--border-light);
+}
+
+.card-info-header h4 {
+    color: var(--text-dark);
+    font-size: 1rem;
+    font-weight: 600;
+    margin: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    flex: 1;
+    margin-right: 0.5rem;
+}
+
+.preview-country {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    flex-shrink: 0;
+}
+
+.preview-country span {
+    font-size: 1.25rem;
+}
+
+.card-info-details {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.info-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.5rem;
+    border-radius: 6px;
+    background: var(--primary-bg);
+    transition: all var(--transition-fast);
+    min-height: 2.25rem;
+}
+
+.info-item:hover {
+    background: var(--secondary-bg);
+    transform: translateX(2px);
+}
+
+.info-item i {
+    color: var(--accent-primary);
+    font-size: 0.9rem;
+    width: 16px;
+    text-align: center;
+    flex-shrink: 0;
+}
+
+.info-item span {
+    color: var(--text-dark);
+    font-size: 0.85rem;
+    font-weight: 500;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    flex: 1;
+    word-break: break-all;
+}
+
+/* Hide empty info items */
+.info-item.hidden {
+    display: none;
+}
+
+/* Ensure preview panel is scrollable */
+.preview-panel {
+    overflow: hidden;
+}
+
+/* Optimize image section for better space usage */
+.preview-image-section {
+    padding: 1rem 0 1rem 0;
+    border-bottom: 1px solid var(--border-light);
+    flex-shrink: 0;
+}
+
+.image-container img {
+    max-height: 200px;
+    object-fit: contain;
+}
+
+/* Responsive adjustments */
+@media (max-width: 1400px) {
+    .preview-panel {
+        max-width: 350px;
+    }
+    
+    .card-info-header h4 {
+        font-size: 0.95rem;
+    }
+    
+    .info-item span {
+        font-size: 0.8rem;
+    }
+}
+
+@media (max-width: 1200px) {
+    .preview-panel {
+        max-width: 300px;
+    }
+    
+    .info-item {
+        padding: 0.4rem;
+        min-height: 2rem;
+    }
+    
+    .info-item span {
+        font-size: 0.75rem;
+    }
+}
