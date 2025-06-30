@@ -1480,7 +1480,7 @@ function hideLoading() {
     }
 }
 
-function showToast(message, type = 'success') {
+function showToast(message, type = 'success', duration = 4000) {
     // Also log to console for debugging
     console.log(`Toast [${type}]: ${message}`);
     
@@ -1488,7 +1488,7 @@ function showToast(message, type = 'success') {
     const toast = document.createElement('div');
     toast.className = `toast toast-${type}`;
     toast.innerHTML = `
-        <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : 'info-circle'}"></i>
+        <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : type === 'warning' ? 'exclamation-triangle' : 'info-circle'}"></i>
         <span>${message}</span>
     `;
     
@@ -1497,7 +1497,7 @@ function showToast(message, type = 'success') {
         position: fixed;
         bottom: 2rem;
         right: 2rem;
-        background: ${type === 'success' ? 'var(--success-light)' : type === 'error' ? 'var(--error-light)' : 'var(--accent-primary)'};
+        background: ${type === 'success' ? 'var(--success-light)' : type === 'error' ? 'var(--error-light)' : type === 'warning' ? 'var(--warning-light)' : 'var(--accent-primary)'};
         color: white;
         padding: 1rem 1.5rem;
         border-radius: 10px;
@@ -1511,10 +1511,10 @@ function showToast(message, type = 'success') {
     
     document.body.appendChild(toast);
     
-    // Remove after 4 seconds (increased from 3 for debugging)
+    // Remove after specified duration
     setTimeout(() => {
         toast.remove();
-    }, 4000);
+    }, duration);
 }
 
 // 361-400: Drag and drop functionality
@@ -1527,9 +1527,25 @@ function initializeDragAndDrop() {
             animation: 150,
             onStart: function(evt) {
                 evt.item.classList.add('dragging');
+                
+                // Check if card is approved for dragging
+                const cardId = evt.item.dataset.cardId;
+                const approvalStatus = loadApprovalStatusLocally(cardId);
+                
+                if (approvalStatus !== 'approved') {
+                    // Add visual feedback for non-approved cards
+                    evt.item.style.opacity = '0.5';
+                    evt.item.style.border = '2px dashed #ef4444';
+                    
+                    // Show temporary message
+                    showToast('⚠️ This card needs reviewer approval before sorting', 'warning', 2000);
+                }
             },
             onEnd: function(evt) {
                 evt.item.classList.remove('dragging');
+                // Reset styling
+                evt.item.style.opacity = '';
+                evt.item.style.border = '';
                 
                 // Handle card movement from unsorted to label containers
                 const cardId = evt.item.dataset.cardId;
@@ -1559,9 +1575,25 @@ function initializeDragAndDrop() {
             animation: 150,
             onStart: function(evt) {
                 evt.item.classList.add('dragging');
+                
+                // Check if card is approved for dragging
+                const cardId = evt.item.dataset.cardId;
+                const approvalStatus = loadApprovalStatusLocally(cardId);
+                
+                if (approvalStatus !== 'approved') {
+                    // Add visual feedback for non-approved cards
+                    evt.item.style.opacity = '0.5';
+                    evt.item.style.border = '2px dashed #ef4444';
+                    
+                    // Show temporary message
+                    showToast('⚠️ This card needs reviewer approval before sorting', 'warning', 2000);
+                }
             },
             onEnd: function(evt) {
                 evt.item.classList.remove('dragging');
+                // Reset styling
+                evt.item.style.opacity = '';
+                evt.item.style.border = '';
                 
                 // Handle card movement between containers
                 const cardId = evt.item.dataset.cardId;
@@ -1586,6 +1618,20 @@ function initializeDragAndDrop() {
 }
 
 function handleDraggedLabelAssignment(cardId, labelId, container) {
+    // Check if card is approved before allowing assignment
+    const approvalStatus = loadApprovalStatusLocally(cardId);
+    console.log(`🔍 Checking approval status for card ${cardId}: ${approvalStatus}`);
+    
+    if (approvalStatus !== 'approved') {
+        showToast('❌ Cards can only be labeled after reviewer approval (green tick)', 'error');
+        
+        // Revert the card back to its original position
+        setTimeout(() => {
+            window.location.reload();
+        }, 1500);
+        return;
+    }
+    
     // Find label name
     const labelHeader = container.closest('.label-group').querySelector('.label-info h3');
     const labelName = labelHeader ? labelHeader.textContent.trim() : '';
@@ -1606,7 +1652,7 @@ function handleDraggedLabelAssignment(cardId, labelId, container) {
     .then(data => {
         hideLoading();
         if (data.success) {
-            showToast('Card moved successfully!', 'success');
+            showToast('✅ Card moved successfully!', 'success');
             // Refresh the page to update the UI
             setTimeout(() => window.location.reload(), 1000);
         } else {
@@ -1625,6 +1671,20 @@ function handleDraggedLabelAssignment(cardId, labelId, container) {
 }
 
 function handleRemoveLabelFromCard(cardId) {
+    // Check if card is approved before allowing removal from label
+    const approvalStatus = loadApprovalStatusLocally(cardId);
+    console.log(`🔍 Checking approval status for card ${cardId} before removal: ${approvalStatus}`);
+    
+    if (approvalStatus !== 'approved') {
+        showToast('❌ Cards can only be moved after reviewer approval (green tick)', 'error');
+        
+        // Revert the card back to its original position
+        setTimeout(() => {
+            window.location.reload();
+        }, 1500);
+        return;
+    }
+    
     showLoading('Removing from label...');
     
     fetch(`/api/cards/${cardId}/label`, {
@@ -1637,7 +1697,7 @@ function handleRemoveLabelFromCard(cardId) {
     .then(data => {
         hideLoading();
         if (data.success) {
-            showToast('Card moved to unsorted!', 'success');
+            showToast('✅ Card moved to unsorted!', 'success');
             // Refresh the page to update the UI
             setTimeout(() => window.location.reload(), 1000);
         } else {
@@ -2175,17 +2235,27 @@ function updateCardApprovalStatus(cardId, status) {
         indicator.dataset.status = status;
     });
     
+    // Update card visual styling based on approval status
+    const cardElements = document.querySelectorAll(`[data-card-id="${cardId}"]`);
+    cardElements.forEach(cardElement => {
+        if (status === 'approved') {
+            cardElement.setAttribute('data-approved', 'true');
+        } else {
+            cardElement.removeAttribute('data-approved');
+        }
+    });
+    
     // Save status locally
     saveApprovalStatusLocally(cardId, status);
     
     const statusText = {
-        'approved': 'Approved',
-        'rejected': 'Rejected', 
-        'issue': 'Marked as having issues',
-        'pending': 'Set to pending review'
+        'approved': 'Approved ✓ - Ready for sorting',
+        'rejected': 'Rejected ✕ - Cannot be sorted', 
+        'issue': 'Marked as having issues ⚠️ - Cannot be sorted',
+        'pending': 'Set to pending review ⏳ - Cannot be sorted'
     };
     
-    showToast(`Card ${statusText[status]}`, 'success');
+    showToast(`${statusText[status]}`, status === 'approved' ? 'success' : 'warning');
 }
 
 // Save approval status to localStorage
@@ -2212,7 +2282,16 @@ function loadAllApprovalStatuses() {
         if (indicator) {
             indicator.dataset.status = savedStatus;
         }
+        
+        // Set visual styling based on approval status
+        if (savedStatus === 'approved') {
+            card.setAttribute('data-approved', 'true');
+        } else {
+            card.removeAttribute('data-approved');
+        }
     });
+    
+    console.log('✅ All approval statuses loaded and visual styling applied');
 }
 
 // Initialize on DOM load

@@ -2756,18 +2756,72 @@ body {
     display: block;
 }
 
-/* Responsive for view toggle buttons */
-@media (max-width: 768px) {
-    .view-toggle-buttons {
-        margin-left: 0;
-        margin-top: 1rem;
-        width: 100%;
-    }
-    
-    .view-toggle-btn {
-        flex: 1;
-        justify-content: center;
-        padding: 0.5rem 0.75rem;
-        font-size: 0.8rem;
-    }
+/* Visual distinction for approved vs non-approved cards */
+.card-item[data-card-id] {
+    position: relative;
+    transition: all var(--transition-normal);
+}
+
+/* Non-approved cards - slightly dimmed with subtle indication */
+.card-item[data-card-id]:not([data-approved="true"]) {
+    opacity: 0.85;
+    border-left: 3px solid #f59e0b;
+}
+
+.card-item[data-card-id]:not([data-approved="true"])::before {
+    content: "⏳ Awaiting Review";
+    position: absolute;
+    top: -8px;
+    left: 8px;
+    background: #fbbf24;
+    color: #92400e;
+    font-size: 0.65rem;
+    font-weight: 600;
+    padding: 2px 6px;
+    border-radius: 4px;
+    z-index: 5;
+    white-space: nowrap;
+}
+
+/* Approved cards - clear and ready for sorting */
+.card-item[data-card-id][data-approved="true"] {
+    opacity: 1;
+    border-left: 3px solid #10b981;
+}
+
+.card-item[data-card-id][data-approved="true"]::before {
+    content: "✓ Approved for Sorting";
+    position: absolute;
+    top: -8px;
+    left: 8px;
+    background: #10b981;
+    color: white;
+    font-size: 0.65rem;
+    font-weight: 600;
+    padding: 2px 6px;
+    border-radius: 4px;
+    z-index: 5;
+    white-space: nowrap;
+}
+
+/* Hover effect for non-approved cards */
+.card-item[data-card-id]:not([data-approved="true"]):hover {
+    cursor: not-allowed;
+    transform: none;
+}
+
+/* Enhanced hover for approved cards */
+.card-item[data-card-id][data-approved="true"]:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-hover);
+}
+
+/* Hide sorting indicators in reviewer view for better focus */
+.manage-content.reviewer-view .card-item::before {
+    display: none;
+}
+
+/* Show them prominently in normal view */
+.manage-content.normal-view .card-item::before {
+    display: block;
 }
