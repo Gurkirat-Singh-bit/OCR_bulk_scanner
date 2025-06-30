@@ -1394,14 +1394,242 @@ function updateVisibleCounters() {
 }
 
 function handleExport() {
-    showLoading('Preparing export...');
+    console.log('🎯 Export button clicked - showing export modal');
+    showExportModal();
+}
+
+function showExportModal() {
+    // Create or show export modal
+    let modal = document.getElementById('exportModal');
+    if (!modal) {
+        modal = createExportModal();
+        document.body.appendChild(modal);
+    }
     
-    // Redirect to existing download endpoint
-    window.location.href = '/download_excel';
+    // Populate labels and countries in the modal
+    populateExportOptions();
+    modal.style.display = 'flex';
+}
+
+function createExportModal() {
+    const modal = document.createElement('div');
+    modal.id = 'exportModal';
+    modal.className = 'modal-overlay';
+    modal.innerHTML = `
+        <div class="modal-content export-modal">
+            <div class="modal-header">
+                <h3><i class="fas fa-download"></i> Export Data</h3>
+                <button class="modal-close" onclick="hideExportModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="export-options">
+                    <div class="export-option">
+                        <button class="export-btn primary" onclick="exportAllData()">
+                            <i class="fas fa-file-excel"></i>
+                            <div>
+                                <strong>Export All Data</strong>
+                                <p>Download complete dataset with enhanced formatting</p>
+                            </div>
+                        </button>
+                    </div>
+                    
+                    <div class="export-option">
+                        <button class="export-btn advanced" onclick="exportAdvancedReport()">
+                            <i class="fas fa-chart-line"></i>
+                            <div>
+                                <strong>Advanced Analytics Report</strong>
+                                <p>Multi-sheet report with charts and data analysis</p>
+                            </div>
+                        </button>
+                    </div>
+                    
+                    <div class="export-option">
+                        <h4><i class="fas fa-tags"></i> Export by Labels</h4>
+                        <div class="filter-group">
+                            <div class="checkbox-group" id="labelCheckboxes"></div>
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="includeUnlabeled">
+                                <span class="checkmark"></span>
+                                Include unlabeled cards
+                            </label>
+                        </div>
+                        <button class="export-btn" onclick="exportByLabels()">
+                            <i class="fas fa-tags"></i> Export Selected Labels
+                        </button>
+                    </div>
+                    
+                    <div class="export-option">
+                        <h4><i class="fas fa-globe"></i> Export by Countries</h4>
+                        <div class="filter-group">
+                            <div class="checkbox-group" id="countryCheckboxes"></div>
+                        </div>
+                        <button class="export-btn" onclick="exportByCountries()">
+                            <i class="fas fa-globe"></i> Export Selected Countries
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    return modal;
+}
+
+function hideExportModal() {
+    const modal = document.getElementById('exportModal');
+    if (modal) {
+        modal.style.display = 'none';
+    }
+}
+
+function populateExportOptions() {
+    populateExportLabels();
+    populateExportCountries();
+}
+
+function populateExportLabels() {
+    const container = document.getElementById('labelCheckboxes');
+    if (!container) return;
+    
+    fetch('/api/labels')
+        .then(response => response.json())
+        .then(data => {
+            if (data.success && data.labels) {
+                container.innerHTML = '';
+                data.labels.forEach(label => {
+                    const labelDiv = document.createElement('div');
+                    labelDiv.className = 'checkbox-item';
+                    labelDiv.innerHTML = `
+                        <label class="checkbox-label">
+                            <input type="checkbox" value="${label.id}" name="exportLabels">
+                            <span class="checkmark"></span>
+                            <span class="label-indicator" style="background-color: ${label.color}"></span>
+                            ${label.name} (${label.card_count || 0} cards)
+                        </label>
+                    `;
+                    container.appendChild(labelDiv);
+                });
+            }
+        })
+        .catch(error => console.error('Error loading labels:', error));
+}
+
+function populateExportCountries() {
+    const container = document.getElementById('countryCheckboxes');
+    if (!container) return;
+    
+    // Get unique countries from current cards
+    const cards = document.querySelectorAll('.card-item');
+    const countryStats = {};
+    
+    cards.forEach(card => {
+        try {
+            const cardData = parseCardData(card);
+            if (cardData && cardData.country) {
+                const country = cardData.country;
+                const flag = cardData.flag || '🌍';
+                const key = `${flag} ${country}`;
+                countryStats[key] = (countryStats[key] || 0) + 1;
+            }
+        } catch (e) {
+            console.error('Error parsing card for country stats:', e);
+        }
+    });
+    
+    container.innerHTML = '';
+    Object.entries(countryStats)
+        .sort((a, b) => b[1] - a[1]) // Sort by count descending
+        .forEach(([countryDisplay, count]) => {
+            const countryCode = countryDisplay.split(' ')[1]; // Extract country code
+            const countryDiv = document.createElement('div');
+            countryDiv.className = 'checkbox-item';
+            countryDiv.innerHTML = `
+                <label class="checkbox-label">
+                    <input type="checkbox" value="${countryCode}" name="exportCountries">
+                    <span class="checkmark"></span>
+                    ${countryDisplay} (${count} cards)
+                </label>
+            `;
+            container.appendChild(countryDiv);
+        });
+}
+
+function exportAllData() {
+    showLoading('Preparing complete export...');
+    
+    // Use the enhanced download endpoint
+    window.location.href = '/download';
     
     setTimeout(() => {
         hideLoading();
-        showToast('Export initiated!', 'success');
+        hideExportModal();
+        showToast('Complete export initiated!', 'success');
+    }, 2000);
+}
+
+function exportAdvancedReport() {
+    showLoading('Preparing advanced analytics report...');
+    
+    // Use the advanced download endpoint
+    window.location.href = '/download/advanced';
+    
+    setTimeout(() => {
+        hideLoading();
+        hideExportModal();
+        showToast('Advanced analytics report initiated!', 'success');
+    }, 2000);
+}
+
+function exportByLabels() {
+    const selectedLabels = Array.from(document.querySelectorAll('input[name="exportLabels"]:checked'))
+        .map(cb => parseInt(cb.value));
+    const includeUnlabeled = document.getElementById('includeUnlabeled')?.checked || false;
+    
+    if (selectedLabels.length === 0 && !includeUnlabeled) {
+        showToast('Please select at least one label or include unlabeled cards', 'warning');
+        return;
+    }
+    
+    showLoading('Preparing label-filtered export...');
+    
+    // Use the filtered download endpoint
+    const params = new URLSearchParams();
+    selectedLabels.forEach(id => params.append('labels', id));
+    if (includeUnlabeled) {
+        params.append('include_unlabeled', 'true');
+    }
+    params.append('type', 'labels');
+    
+    window.location.href = `/download/filtered?${params.toString()}`;
+    
+    setTimeout(() => {
+        hideLoading();
+        hideExportModal();
+        showToast('Label-filtered export initiated!', 'success');
+    }, 2000);
+}
+
+function exportByCountries() {
+    const selectedCountries = Array.from(document.querySelectorAll('input[name="exportCountries"]:checked'))
+        .map(cb => cb.value);
+    
+    if (selectedCountries.length === 0) {
+        showToast('Please select at least one country', 'warning');
+        return;
+    }
+    
+    showLoading('Preparing country-filtered export...');
+    
+    // Use the filtered download endpoint
+    const params = new URLSearchParams();
+    selectedCountries.forEach(country => params.append('countries', country));
+    params.append('type', 'countries');
+    
+    window.location.href = `/download/filtered?${params.toString()}`;
+    
+    setTimeout(() => {
+        hideLoading();
+        hideExportModal();
+        showToast('Country-filtered export initiated!', 'success');
     }, 2000);
 }
 
