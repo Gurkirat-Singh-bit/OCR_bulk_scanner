@@ -2357,7 +2357,6 @@ document.addEventListener('keydown', function(e) {
 // Image Modal Functions
 function openImageModal() {
     const previewImage = document.getElementById('previewImage');
-    const previewImage = document.getElementById('previewImage');
     const modalImage = document.getElementById('modalImage');
     const modalFilename = document.getElementById('modalImageFilename');
     const imageModal = document.getElementById('imageModal');
