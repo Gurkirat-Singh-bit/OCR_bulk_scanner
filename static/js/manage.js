@@ -1244,6 +1244,13 @@ function handleEditCard(button) {
     document.getElementById('editWebsite').value = cardData.website || '';
     document.getElementById('editCountry').value = cardData.country || '';
     
+    // Populate event fields
+    document.getElementById('editEventName').value = cardData.event_name || '';
+    document.getElementById('editEventHost').value = cardData.event_host || '';
+    document.getElementById('editEventDate').value = cardData.event_date || '';
+    document.getElementById('editEventLocation').value = cardData.event_location || '';
+    document.getElementById('editEventDescription').value = cardData.event_description || '';
+    
     // Set flag data if available
     const countryInput = document.getElementById('editCountry');
     if (cardData.flag) {
@@ -1281,7 +1288,13 @@ function handleSaveCard(e) {
         phone: document.getElementById('editPhone').value.trim(),
         website: document.getElementById('editWebsite').value.trim(),
         country: document.getElementById('editCountry').value.trim(),
-        flag: document.getElementById('editCountry').dataset.flag || '🌍'
+        flag: document.getElementById('editCountry').dataset.flag || '🌍',
+        // Event fields
+        event_name: document.getElementById('editEventName').value.trim(),
+        event_host: document.getElementById('editEventHost').value.trim(),
+        event_date: document.getElementById('editEventDate').value.trim(),
+        event_location: document.getElementById('editEventLocation').value.trim(),
+        event_description: document.getElementById('editEventDescription').value.trim()
     };
     
     showLoading('Saving changes...');
@@ -2156,6 +2169,13 @@ function populatePreviewData(card) {
     setFieldValue('previewPhone', card.phone || 'N/A');
     setFieldValue('previewWebsite', card.website || 'N/A');
     
+    // Set event form fields if they exist
+    setFieldValue('previewEventName', card.event_name || '');
+    setFieldValue('previewEventHost', card.event_host || '');
+    setFieldValue('previewEventDate', card.event_date || '');
+    setFieldValue('previewEventLocation', card.event_location || '');
+    setFieldValue('previewEventDescription', card.event_description || '');
+    
     // Set country and flag
     const countrySelect = document.getElementById('previewCountry');
     const flagDisplay = document.getElementById('previewFlag');
@@ -2203,6 +2223,25 @@ function populateCardInfo(card) {
     updateInfoItem('previewPhoneItem', 'previewCardPhone', card.phone);
     updateInfoItem('previewWebsiteItem', 'previewCardWebsite', card.website);
     updateInfoItem('previewDesignationItem', 'previewCardDesignation', card.designation);
+    
+    // Handle event information section
+    const hasEventInfo = card.event_name || card.event_host || card.event_date || card.event_location || card.event_description;
+    const eventSection = document.getElementById('previewEventSection');
+    
+    if (eventSection) {
+        if (hasEventInfo) {
+            // Show event section and populate fields
+            eventSection.style.display = 'block';
+            updateInfoItem('previewEventNameItem', 'previewEventName', card.event_name);
+            updateInfoItem('previewEventHostItem', 'previewEventHost', card.event_host);
+            updateInfoItem('previewEventDateItem', 'previewEventDate', card.event_date);
+            updateInfoItem('previewEventLocationItem', 'previewEventLocation', card.event_location);
+            updateInfoItem('previewEventDescriptionItem', 'previewEventDescription', card.event_description);
+        } else {
+            // Hide event section if no event data
+            eventSection.style.display = 'none';
+        }
+    }
     
     console.log('✅ Card info populated for:', card.name || 'Unknown');
 }

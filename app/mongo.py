@@ -537,6 +537,12 @@ def store_card_with_image(extracted_data, image_bytes, filename):
             'is_sorted': extracted_data.get('is_sorted', False),
             'label_id': extracted_data.get('label_id'),
             'label_name': extracted_data.get('label_name'),
+            # Event-related fields for company events/meetings
+            'event_name': extracted_data.get('event_name', ''),
+            'event_description': extracted_data.get('event_description', ''),
+            'event_host': extracted_data.get('event_host', ''),
+            'event_date': extracted_data.get('event_date', ''),
+            'event_location': extracted_data.get('event_location', ''),
             'timestamp': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
             'created_at': datetime.now(),
             'updated_at': datetime.now()

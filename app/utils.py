@@ -59,7 +59,8 @@ def generate_excel_from_mongo():
         worksheet = workbook.active
         
         # Add comprehensive headers
-        headers = ['Name', 'Phone', 'Email', 'Company', 'Website', 'Address', 'Filename', 'Timestamp']
+        headers = ['Name', 'Phone', 'Email', 'Company', 'Website', 'Address', 'Filename', 'Timestamp', 
+                  'Event Name', 'Event Description', 'Event Host', 'Event Date', 'Event Location']
         worksheet.append(headers)
         print("✅ Headers added to Excel file")
         
@@ -74,7 +75,13 @@ def generate_excel_from_mongo():
                 data.get('website', ''),
                 data.get('address', ''),
                 data.get('filename', ''),
-                data.get('timestamp', '')
+                data.get('timestamp', ''),
+                # Event-related fields
+                data.get('event_name', ''),
+                data.get('event_description', ''),
+                data.get('event_host', ''),
+                data.get('event_date', ''),
+                data.get('event_location', '')
             ]
             worksheet.append(row_data)
             rows_added += 1

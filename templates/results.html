@@ -69,6 +69,10 @@
                                     <th><i class="fas fa-envelope"></i> Email</th>
                                     <th><i class="fas fa-phone"></i> Phone</th>
                                     <th><i class="fas fa-building"></i> Company</th>
+                                    <th><i class="fas fa-calendar-alt"></i> Event</th>
+                                    <th><i class="fas fa-user-tie"></i> Host</th>
+                                    <th><i class="fas fa-calendar"></i> Date</th>
+                                    <th><i class="fas fa-map-marker-alt"></i> Location</th>
                                     <th><i class="fas fa-cog"></i> Actions</th>
                                 </tr>
                             </thead>
@@ -91,6 +95,22 @@
                                     <td data-field="company">
                                         <span class="cell-content">{{ row.company or 'N/A' }}</span>
                                         <input type="text" class="edit-input" value="{{ row.company or '' }}" style="display: none;">
+                                    </td>
+                                    <td data-field="event_name">
+                                        <span class="cell-content">{{ row.event_name or 'N/A' }}</span>
+                                        <input type="text" class="edit-input" value="{{ row.event_name or '' }}" style="display: none;">
+                                    </td>
+                                    <td data-field="event_host">
+                                        <span class="cell-content">{{ row.event_host or 'N/A' }}</span>
+                                        <input type="text" class="edit-input" value="{{ row.event_host or '' }}" style="display: none;">
+                                    </td>
+                                    <td data-field="event_date">
+                                        <span class="cell-content">{{ row.event_date or 'N/A' }}</span>
+                                        <input type="date" class="edit-input" value="{{ row.event_date or '' }}" style="display: none;">
+                                    </td>
+                                    <td data-field="event_location">
+                                        <span class="cell-content">{{ row.event_location or 'N/A' }}</span>
+                                        <input type="text" class="edit-input" value="{{ row.event_location or '' }}" style="display: none;">
                                     </td>
                                     <td class="actions-cell">
                                         <button class="action-btn edit-btn" data-row-index="{{ loop.index0 }}" title="Edit">

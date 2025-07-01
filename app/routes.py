@@ -37,6 +37,15 @@ def upload_files():
         flash('No files selected', 'error')
         return redirect(url_for('main.index'))
     
+    # Extract event information from form (optional)
+    event_info = {
+        'event_name': request.form.get('event_name', '').strip(),
+        'event_description': request.form.get('event_description', '').strip(),
+        'event_host': request.form.get('event_host', '').strip(),
+        'event_date': request.form.get('event_date', '').strip(),
+        'event_location': request.form.get('event_location', '').strip()
+    }
+    
     # Initialize processing variables
     processed_data = []
     saved_file_paths = []
@@ -83,6 +92,9 @@ def upload_files():
                         structured_data['country'] = country_code
                         structured_data['flag'] = flag
                         structured_data['is_sorted'] = False  # New cards start as unsorted
+                        
+                        # Add event information to extracted data
+                        structured_data.update(event_info)
                         
                         # Store card with image in MongoDB
                         record_id = store_card_with_image(structured_data, image_bytes, file.filename)
@@ -172,7 +184,13 @@ def edit_record(record_id):
             'email': request.form.get('email', '').strip(),
             'phone': request.form.get('phone', '').strip(),
             'company': request.form.get('company', '').strip(),
-            'filename': request.form.get('filename', '').strip()
+            'filename': request.form.get('filename', '').strip(),
+            # Event-related fields for company events/meetings
+            'event_name': request.form.get('event_name', '').strip(),
+            'event_description': request.form.get('event_description', '').strip(),
+            'event_host': request.form.get('event_host', '').strip(),
+            'event_date': request.form.get('event_date', '').strip(),
+            'event_location': request.form.get('event_location', '').strip()
         }
         
         if update_extraction_record(record_id, updated_data):
@@ -469,7 +487,8 @@ def update_card_preview(card_id):
     data = request.get_json()
     
     # Validate required fields
-    allowed_fields = ['name', 'company', 'email', 'phone', 'website', 'designation', 'country', 'flag']
+    allowed_fields = ['name', 'company', 'email', 'phone', 'website', 'designation', 'country', 'flag',
+                     'event_name', 'event_description', 'event_host', 'event_date', 'event_location']
     update_data = {k: v for k, v in data.items() if k in allowed_fields}
     
     if update_card_data(card_id, update_data):

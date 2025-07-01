@@ -290,6 +290,37 @@
                                     <i class="fas fa-user-tie"></i>
                                     <span id="previewCardDesignation">Designation</span>
                                 </div>
+                                
+                                <!-- Event Information Section -->
+                                <div class="event-info-section" id="previewEventSection" style="display: none;">
+                                    <div class="section-divider"></div>
+                                    <h5><i class="fas fa-calendar-alt"></i> Event Information</h5>
+                                    
+                                    <div class="info-item" id="previewEventNameItem">
+                                        <i class="fas fa-tag"></i>
+                                        <span id="previewEventName">Event Name</span>
+                                    </div>
+                                    
+                                    <div class="info-item" id="previewEventHostItem">
+                                        <i class="fas fa-user-tie"></i>
+                                        <span id="previewEventHost">Event Host</span>
+                                    </div>
+                                    
+                                    <div class="info-item" id="previewEventDateItem">
+                                        <i class="fas fa-calendar"></i>
+                                        <span id="previewEventDate">Event Date</span>
+                                    </div>
+                                    
+                                    <div class="info-item" id="previewEventLocationItem">
+                                        <i class="fas fa-map-marker-alt"></i>
+                                        <span id="previewEventLocation">Event Location</span>
+                                    </div>
+                                    
+                                    <div class="info-item" id="previewEventDescriptionItem">
+                                        <i class="fas fa-align-left"></i>
+                                        <span id="previewEventDescription">Event Description</span>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -387,6 +418,35 @@
                                     <!-- Country options will be populated by JavaScript -->
                                 </div>
                             </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Event Information Section -->
+                    <div class="event-section">
+                        <h3><i class="fas fa-calendar-alt"></i> Event Information</h3>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="editEventName">Event Name</label>
+                                <input type="text" id="editEventName" placeholder="e.g., Annual Conference 2025">
+                            </div>
+                            <div class="form-group">
+                                <label for="editEventHost">Event Host</label>
+                                <input type="text" id="editEventHost" placeholder="e.g., TechCorp Ltd.">
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="editEventDate">Event Date</label>
+                                <input type="date" id="editEventDate">
+                            </div>
+                            <div class="form-group">
+                                <label for="editEventLocation">Meeting Location</label>
+                                <input type="text" id="editEventLocation" placeholder="e.g., New York Convention Center">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="editEventDescription">Event Description</label>
+                            <textarea id="editEventDescription" rows="3" placeholder="Brief description of the event or meeting purpose..."></textarea>
                         </div>
                     </div>
                     <div class="form-actions">
