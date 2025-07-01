@@ -433,10 +433,13 @@ function handleSearch(e) {
 }
 
 function performSearch(query) {
-    const cards = document.querySelectorAll('.card-item');
+    // Search both normal view cards and gallery view cards
+    const normalCards = document.querySelectorAll('.card-item');
+    const galleryCards = document.querySelectorAll('.gallery-card-item');
+    const allCards = [...normalCards, ...galleryCards];
     const queryLower = query.toLowerCase();
     
-    cards.forEach(card => {
+    allCards.forEach(card => {
         const cardData = safelyCallFunction(parseCardData, card);
         if (!cardData) return; // Skip if parsing failed
         
@@ -446,7 +449,10 @@ function performSearch(query) {
             cardData.email || '',
             cardData.phone || '',
             cardData.country || '',
-            cardData.designation || ''
+            cardData.designation || '',
+            cardData.event_name || '',
+            cardData.event_host || '',
+            cardData.event_location || ''
         ].join(' ').toLowerCase();
         
         if (searchableText.includes(queryLower)) {
@@ -487,8 +493,12 @@ function removeSearchHighlights() {
 }
 
 function showAllCards() {
-    const cards = document.querySelectorAll('.card-item');
-    cards.forEach(card => {
+    // Show both normal view cards and gallery view cards
+    const normalCards = document.querySelectorAll('.card-item');
+    const galleryCards = document.querySelectorAll('.gallery-card-item');
+    const allCards = [...normalCards, ...galleryCards];
+    
+    allCards.forEach(card => {
         card.style.display = 'block';
     });
     updateVisibleCounters();
@@ -509,18 +519,31 @@ function populateCountryFilter() {
         countryFilter.removeChild(countryFilter.lastChild);
     }
     
-    // Get all cards and count by country
-    const cards = document.querySelectorAll('.card-item');
+    // Get all cards and count by country (both normal and gallery view)
+    const normalCards = document.querySelectorAll('.card-item');
+    const galleryCards = document.querySelectorAll('.gallery-card-item');
+    // Use Set to avoid double counting the same card
+    const allCardIds = new Set();
+    const uniqueCards = [];
+    
+    [...normalCards, ...galleryCards].forEach(card => {
+        const cardId = card.dataset.cardId;
+        if (cardId && !allCardIds.has(cardId)) {
+            allCardIds.add(cardId);
+            uniqueCards.push(card);
+        }
+    });
+    
     const countryCount = new Map();
     
-    console.log(`Found ${cards.length} cards to analyze`);
+    console.log(`Found ${uniqueCards.length} unique cards to analyze`);
     
-    if (cards.length === 0) {
+    if (uniqueCards.length === 0) {
         console.warn('No cards found for country analysis');
         return;
     }
     
-    cards.forEach((card, index) => {
+    uniqueCards.forEach((card, index) => {
         try {
             const cardData = parseCardData(card);
             console.log(`Card ${index + 1}:`, cardData);
@@ -628,11 +651,15 @@ function handleFilterChange(event) {
 function filterCards(labelId, country) {
     console.log('🎯 Filtering cards with:', { labelId, country });
     
-    const cards = document.querySelectorAll('.card-item');
+    // Filter both normal view cards and gallery view cards
+    const normalCards = document.querySelectorAll('.card-item');
+    const galleryCards = document.querySelectorAll('.gallery-card-item');
+    const allCards = [...normalCards, ...galleryCards];
+    
     let visibleCount = 0;
     let hiddenCount = 0;
     
-    cards.forEach((card, index) => {
+    allCards.forEach((card, index) => {
         try {
             const cardData = parseCardData(card);
             if (!cardData) {
@@ -2463,6 +2490,7 @@ function initializeViewMode() {
     // Add event listeners for view toggle buttons
     const normalViewBtn = document.getElementById('normalViewBtn');
     const reviewerViewBtn = document.getElementById('reviewerViewBtn');
+    const galleryViewBtn = document.getElementById('galleryViewBtn');
     
     if (normalViewBtn) {
         normalViewBtn.addEventListener('click', () => switchViewMode('normal'));
@@ -2471,28 +2499,220 @@ function initializeViewMode() {
     if (reviewerViewBtn) {
         reviewerViewBtn.addEventListener('click', () => switchViewMode('reviewer'));
     }
+    
+    if (galleryViewBtn) {
+        galleryViewBtn.addEventListener('click', () => switchViewMode('gallery'));
+    }
 }
 
-// Switch between normal and reviewer view modes
+// Switch between normal, reviewer, and gallery view modes
 function switchViewMode(mode) {
     console.log(`🔄 Switching to ${mode} view mode`);
     
     currentViewMode = mode;
     const manageContent = document.querySelector('.manage-content');
+    const manageLayout = document.querySelector('.manage-layout');
+    const galleryView = document.getElementById('galleryView');
     const normalBtn = document.getElementById('normalViewBtn');
     const reviewerBtn = document.getElementById('reviewerViewBtn');
+    const galleryBtn = document.getElementById('galleryViewBtn');
     
-    if (!manageContent || !normalBtn || !reviewerBtn) return;
+    if (!manageContent || !normalBtn || !reviewerBtn || !galleryBtn) return;
+    
+    // Hide/show appropriate views
+    if (mode === 'gallery') {
+        manageLayout.style.display = 'none';
+        galleryView.style.display = 'block';
+        initializeGalleryView();
+    } else {
+        manageLayout.style.display = 'grid';
+        galleryView.style.display = 'none';
+    }
     
     // Update CSS classes
-    manageContent.classList.remove('normal-view', 'reviewer-view');
+    manageContent.classList.remove('normal-view', 'reviewer-view', 'gallery-view');
     manageContent.classList.add(`${mode}-view`);
     
     // Update button states
     normalBtn.classList.toggle('active', mode === 'normal');
     reviewerBtn.classList.toggle('active', mode === 'reviewer');
+    galleryBtn.classList.toggle('active', mode === 'gallery');
     
     showToast(`Switched to ${mode} view`, 'success');
+}
+
+// Gallery View Functions
+let currentGalleryCard = null;
+
+function initializeGalleryView() {
+    console.log('🖼️ Initializing gallery view');
+    
+    // Add event listeners to gallery cards
+    const galleryCards = document.querySelectorAll('.gallery-card-item');
+    galleryCards.forEach(card => {
+        card.addEventListener('click', () => selectGalleryCard(card));
+    });
+    
+    // Add event listeners to gallery action buttons
+    const galleryEditBtn = document.getElementById('galleryEditBtn');
+    const galleryDeleteBtn = document.getElementById('galleryDeleteBtn');
+    
+    if (galleryEditBtn) {
+        galleryEditBtn.addEventListener('click', () => editGalleryCard());
+    }
+    
+    if (galleryDeleteBtn) {
+        galleryDeleteBtn.addEventListener('click', () => deleteGalleryCard());
+    }
+    
+    console.log('✅ Gallery view initialized');
+}
+
+function selectGalleryCard(cardElement) {
+    console.log('🖼️ Selecting gallery card');
+    
+    // Remove previous selection
+    document.querySelectorAll('.gallery-card-item').forEach(card => {
+        card.classList.remove('selected');
+    });
+    
+    // Add selection to current card
+    cardElement.classList.add('selected');
+    
+    // Parse card data
+    const cardData = safelyCallFunction(parseCardData, cardElement);
+    if (!cardData) {
+        showErrorToast('Error: Could not read card data');
+        return;
+    }
+    
+    currentGalleryCard = cardData;
+    
+    // Populate gallery preview
+    populateGalleryPreview(cardData);
+}
+
+function populateGalleryPreview(card) {
+    console.log('🖼️ Populating gallery preview for:', card.name || 'Unknown');
+    
+    const previewContent = document.getElementById('galleryPreviewContent');
+    const previewLoaded = document.getElementById('galleryPreviewLoaded');
+    
+    if (!previewContent || !previewLoaded) return;
+    
+    // Hide placeholder, show loaded content
+    previewContent.style.display = 'none';
+    previewLoaded.style.display = 'block';
+    
+    // Set image
+    const previewImage = document.getElementById('galleryPreviewImage');
+    if (previewImage && card.image_base64) {
+        previewImage.src = card.image_base64;
+        previewImage.alt = `Business card for ${card.name || 'Unknown'}`;
+    }
+    
+    // Set card name
+    const cardName = document.getElementById('galleryCardName');
+    if (cardName) {
+        cardName.textContent = card.name || 'Unknown Name';
+    }
+    
+    // Helper function to update info items
+    function updateGalleryInfoItem(itemId, fieldId, value) {
+        const item = document.getElementById(itemId);
+        const field = document.getElementById(fieldId);
+        
+        if (item && field) {
+            if (value && value.trim() && value.trim() !== 'N/A') {
+                field.textContent = value.trim();
+                item.style.display = 'grid';
+            } else {
+                item.style.display = 'none';
+            }
+        }
+    }
+    
+    // Update basic information
+    updateGalleryInfoItem('galleryCompanyItem', 'galleryCompany', card.company);
+    updateGalleryInfoItem('galleryEmailItem', 'galleryEmail', card.email);
+    updateGalleryInfoItem('galleryPhoneItem', 'galleryPhone', card.phone);
+    updateGalleryInfoItem('galleryWebsiteItem', 'galleryWebsite', card.website);
+    updateGalleryInfoItem('galleryCountryItem', 'galleryCountry', card.country);
+    updateGalleryInfoItem('galleryDesignationItem', 'galleryDesignation', card.designation);
+    
+    // Handle event information
+    const hasEventInfo = card.event_name || card.event_host || card.event_date || card.event_location || card.event_description;
+    const eventSection = document.getElementById('galleryEventSection');
+    
+    if (eventSection) {
+        if (hasEventInfo) {
+            eventSection.style.display = 'block';
+            updateGalleryInfoItem('galleryEventNameItem', 'galleryEventName', card.event_name);
+            updateGalleryInfoItem('galleryEventHostItem', 'galleryEventHost', card.event_host);
+            updateGalleryInfoItem('galleryEventDateItem', 'galleryEventDate', card.event_date);
+            updateGalleryInfoItem('galleryEventLocationItem', 'galleryEventLocation', card.event_location);
+            updateGalleryInfoItem('galleryEventDescriptionItem', 'galleryEventDescription', card.event_description);
+        } else {
+            eventSection.style.display = 'none';
+        }
+    }
+    
+    console.log('✅ Gallery preview populated');
+}
+
+function editGalleryCard() {
+    if (!currentGalleryCard) {
+        showErrorToast('No card selected');
+        return;
+    }
+    
+    console.log('✏️ Editing gallery card:', currentGalleryCard.name);
+    
+    // Switch to normal view and trigger edit
+    switchViewMode('normal');
+    setTimeout(() => {
+        // Find the card in normal view and trigger edit
+        const cardElement = document.querySelector(`[data-card-id="${currentGalleryCard.id}"]`);
+        if (cardElement) {
+            const editBtn = cardElement.querySelector('.edit-card-btn');
+            if (editBtn) {
+                editBtn.click();
+            }
+        }
+    }, 300);
+}
+
+function deleteGalleryCard() {
+    if (!currentGalleryCard) {
+        showErrorToast('No card selected');
+        return;
+    }
+    
+    console.log('🗑️ Deleting gallery card:', currentGalleryCard.name);
+    
+    const cardName = currentGalleryCard.name || 'Unknown';
+    if (confirm(`Are you sure you want to delete the business card for "${cardName}"?`)) {
+        fetch(`/api/cards/${currentGalleryCard.id}`, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showSuccessToast('Card deleted successfully');
+                // Reload the page to refresh gallery view
+                window.location.reload();
+            } else {
+                showErrorToast('Failed to delete card: ' + (data.message || 'Unknown error'));
+            }
+        })
+        .catch(error => {
+            console.error('Error deleting card:', error);
+            showErrorToast('Error deleting card');
+        });
+    }
 }
 
 // Initialize approval status functionality

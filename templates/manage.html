@@ -12,7 +12,7 @@
     <!-- Font Awesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Custom CSS -->
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v={{ moment().unix() if moment else '20250629' }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v=20250629">
     <!-- SortableJS for drag and drop -->
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
 </head>
@@ -70,6 +70,9 @@
                         </button>
                         <button class="view-toggle-btn" id="reviewerViewBtn" data-view="reviewer">
                             <i class="fas fa-clipboard-check"></i> Reviewer View
+                        </button>
+                        <button class="view-toggle-btn" id="galleryViewBtn" data-view="gallery">
+                            <i class="fas fa-th-large"></i> Gallery View
                         </button>
                     </div>
                 </div>
@@ -326,6 +329,169 @@
                     </div>
                 </div>
             </div>
+            
+            <!-- Gallery View Section (Hidden by default) -->
+            <div class="gallery-view" id="galleryView" style="display: none;">
+                <div class="gallery-header">
+                    <h2><i class="fas fa-th-large"></i> Gallery View</h2>
+                    <div class="gallery-stats">
+                        <span class="total-cards-count" id="galleryTotalCount">{{ (unsorted_cards|length) + (sorted_cards|length) }}</span> cards
+                    </div>
+                </div>
+                
+                <div class="gallery-layout">
+                    <!-- Left: Cards Grid -->
+                    <div class="gallery-grid-container">
+                        <div class="gallery-grid" id="galleryGrid">
+                            {% for card in unsorted_cards + sorted_cards %}
+                            <div class="gallery-card-item" data-card-id="{{ card.id }}" data-card-data='{{ card|tojson }}'>
+                                <div class="gallery-card-image">
+                                    {% if card.image_base64 %}
+                                    <img src="{{ card.image_base64 }}" alt="{{ card.name or 'Business Card' }}" loading="lazy">
+                                    {% else %}
+                                    <div class="no-image-placeholder">
+                                        <i class="fas fa-id-card"></i>
+                                    </div>
+                                    {% endif %}
+                                </div>
+                                <div class="gallery-card-info">
+                                    <h4>{{ card.name or 'Unknown' }}</h4>
+                                    <p class="company">{{ card.company or 'No Company' }}</p>
+                                    <div class="card-meta">
+                                        <span class="country-flag">{{ card.flag or '🌍' }}</span>
+                                        {% if card.event_name %}
+                                        <span class="event-badge"><i class="fas fa-calendar-alt"></i> {{ card.event_name }}</span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                            
+                            {% if not (unsorted_cards or sorted_cards) %}
+                            <div class="gallery-empty-state">
+                                <i class="fas fa-images"></i>
+                                <h3>No cards to display</h3>
+                                <p>Upload some business cards to see them in gallery view.</p>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <!-- Right: Large Preview -->
+                    <div class="gallery-preview-panel">
+                        <div class="gallery-preview-header">
+                            <h3><i class="fas fa-eye"></i> Card Preview</h3>
+                        </div>
+                        
+                        <div class="gallery-preview-content" id="galleryPreviewContent">
+                            <div class="gallery-preview-placeholder">
+                                <i class="fas fa-mouse-pointer"></i>
+                                <h4>Select a card to preview</h4>
+                                <p>Click on any card thumbnail to view full details</p>
+                            </div>
+                        </div>
+                        
+                        <div class="gallery-preview-loaded" id="galleryPreviewLoaded" style="display: none;">
+                            <!-- Large Card Image -->
+                            <div class="gallery-preview-image-section">
+                                <div class="gallery-image-container">
+                                    <img id="galleryPreviewImage" src="" alt="Business Card" />
+                                </div>
+                            </div>
+                            
+                            <!-- Detailed Card Information -->
+                            <div class="gallery-preview-details">
+                                <div class="gallery-card-header">
+                                    <h3 id="galleryCardName">Card Name</h3>
+                                    <div class="gallery-card-actions">
+                                        <button class="gallery-action-btn edit-btn" id="galleryEditBtn" title="Edit Card">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        <button class="gallery-action-btn delete-btn" id="galleryDeleteBtn" title="Delete Card">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                
+                                <div class="gallery-info-grid">
+                                    <div class="gallery-info-item" id="galleryCompanyItem">
+                                        <i class="fas fa-building"></i>
+                                        <span>Company:</span>
+                                        <strong id="galleryCompany">-</strong>
+                                    </div>
+                                    
+                                    <div class="gallery-info-item" id="galleryEmailItem">
+                                        <i class="fas fa-envelope"></i>
+                                        <span>Email:</span>
+                                        <strong id="galleryEmail">-</strong>
+                                    </div>
+                                    
+                                    <div class="gallery-info-item" id="galleryPhoneItem">
+                                        <i class="fas fa-phone"></i>
+                                        <span>Phone:</span>
+                                        <strong id="galleryPhone">-</strong>
+                                    </div>
+                                    
+                                    <div class="gallery-info-item" id="galleryWebsiteItem">
+                                        <i class="fas fa-globe"></i>
+                                        <span>Website:</span>
+                                        <strong id="galleryWebsite">-</strong>
+                                    </div>
+                                    
+                                    <div class="gallery-info-item" id="galleryCountryItem">
+                                        <i class="fas fa-flag"></i>
+                                        <span>Country:</span>
+                                        <strong id="galleryCountry">-</strong>
+                                    </div>
+                                    
+                                    <div class="gallery-info-item" id="galleryDesignationItem">
+                                        <i class="fas fa-user-tie"></i>
+                                        <span>Designation:</span>
+                                        <strong id="galleryDesignation">-</strong>
+                                    </div>
+                                </div>
+                                
+                                <!-- Event Information Section -->
+                                <div class="gallery-event-section" id="galleryEventSection" style="display: none;">
+                                    <h4><i class="fas fa-calendar-alt"></i> Event Information</h4>
+                                    
+                                    <div class="gallery-event-grid">
+                                        <div class="gallery-info-item" id="galleryEventNameItem">
+                                            <i class="fas fa-tag"></i>
+                                            <span>Event:</span>
+                                            <strong id="galleryEventName">-</strong>
+                                        </div>
+                                        
+                                        <div class="gallery-info-item" id="galleryEventHostItem">
+                                            <i class="fas fa-user-tie"></i>
+                                            <span>Host:</span>
+                                            <strong id="galleryEventHost">-</strong>
+                                        </div>
+                                        
+                                        <div class="gallery-info-item" id="galleryEventDateItem">
+                                            <i class="fas fa-calendar"></i>
+                                            <span>Date:</span>
+                                            <strong id="galleryEventDate">-</strong>
+                                        </div>
+                                        
+                                        <div class="gallery-info-item" id="galleryEventLocationItem">
+                                            <i class="fas fa-map-marker-alt"></i>
+                                            <span>Location:</span>
+                                            <strong id="galleryEventLocation">-</strong>
+                                        </div>
+                                        
+                                        <div class="gallery-info-item full-width" id="galleryEventDescriptionItem">
+                                            <i class="fas fa-align-left"></i>
+                                            <span>Description:</span>
+                                            <strong id="galleryEventDescription">-</strong>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </main>
     </div>
 
@@ -485,6 +651,6 @@
     </div>
 
     <!-- Custom JavaScript for manage interface -->
-    <script src="{{ url_for('static', filename='js/manage.js') }}?v={{ moment().unix() if moment else '20250629_v2' }}"></script>
+    <script src="{{ url_for('static', filename='js/manage.js') }}?v=20250629_v2"></script>
 </body>
 </html>
