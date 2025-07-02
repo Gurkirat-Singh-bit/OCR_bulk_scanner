@@ -1,15 +1,15 @@
-/* 1-10: CSS Variables and root styles - Modern Professional Theme */
+/* 1-10: CSS Variables and root styles - World Space Council Theme */
 :root {
-    /* Modern blue-gray and teal color scheme */
+    /* World Space Council navy and orange color scheme */
     --primary-bg: #f8fafc;
-    --secondary-bg: #f1f5f9;
-    --tertiary-bg: #e2e8f0;
-    --accent-primary: #0891b2;
-    --accent-secondary: #0e7490;
-    --accent-light: #67e8f9;
-    --text-dark: #1e293b;
-    --text-medium: #475569;
-    --text-light: #64748b;
+    --secondary-bg: #f1f5f9; 
+    --tertiary-bg: #e5eaf0;
+    --accent-primary: #f89827; /* World Space Council orange */
+    --accent-secondary: #e88112; /* Darker orange for hover states */
+    --accent-light: #ffc078; /* Lighter orange */
+    --text-dark: #14293d; /* World Space Council navy */
+    --text-medium: #2c4559;
+    --text-light: #4a6278;
     --border-light: #cbd5e1;
     --white: #ffffff;
     --success-light: #059669;
@@ -60,24 +60,29 @@ body {
     text-align: center;
     margin-bottom: 3rem;
     animation: fadeInDown 0.8s ease-out;
+    background: var(--text-dark); /* World Space Council navy blue */
+    border-radius: 16px;
+    padding: 2rem;
+    box-shadow: var(--shadow-medium);
 }
 
 .header-content h1 {
     font-size: 3rem;
     font-weight: 600;
-    color: var(--text-dark);
+    color: var(--white); /* White text for better contrast on navy */
     margin-bottom: 0.5rem;
     position: relative;
 }
 
 .header-content h1 i {
-    color: var(--accent-primary);
+    color: var(--accent-primary); /* World Space Council orange */
     margin-right: 0.5rem;
 }
 
 .subtitle {
     font-size: 1.1rem;
-    color: var(--text-medium);
+    color: var(--white);
+    opacity: 0.85;
     font-weight: 400;
 }
 
@@ -193,21 +198,23 @@ body {
     align-items: center;
     justify-content: space-between;
     margin-bottom: 2rem;
-    padding-bottom: 1rem;
-    border-bottom: 1px solid var(--border-light);
+    padding: 1rem 1.5rem;
+    border-radius: 8px;
+    background: var(--text-dark); /* World Space Council navy */
+    color: var(--white);
 }
 
 .section-header h2 {
     font-size: 1.4rem;
     font-weight: 600;
-    color: var(--text-dark);
+    color: var(--white);
     display: flex;
     align-items: center;
     gap: 0.5rem;
 }
 
 .section-header h2 i {
-    color: var(--accent-primary);
+    color: var(--accent-primary); /* World Space Council orange */
 }
 
 .view-all-btn {
@@ -475,7 +482,7 @@ body {
 }
 
 .submit-btn {
-    background: linear-gradient(135deg, var(--success-light) 0%, #047857 100%);
+    background: linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-secondary) 100%);
     color: var(--white);
     border: none;
     padding: 0.75rem 2rem;
@@ -949,9 +956,9 @@ body {
 }
 
 .nav-action-btn {
-    background: var(--white);
-    color: var(--text-medium);
-    border: 1px solid var(--border-light);
+    background: var(--accent-primary); /* World Space Council orange */
+    color: var(--white);
+    border: 1px solid var(--accent-primary);
     padding: 0.6rem 1.2rem;
     border-radius: 8px;
     cursor: pointer;
@@ -963,9 +970,9 @@ body {
 }
 
 .nav-action-btn:hover {
-    background: var(--accent-primary);
+    background: var(--accent-secondary); /* Darker orange on hover */
     color: var(--white);
-    border-color: var(--accent-primary);
+    border-color: var(--accent-secondary);
 }
 
 .results-main {
@@ -1200,7 +1207,7 @@ body {
 
 /* 521-600: Data Management Interface Styles */
 .manage-nav {
-    background: var(--white);
+    background: var(--text-dark); /* World Space Council navy blue */
     border-radius: 16px;
     margin-bottom: 2rem;
     border: 1px solid var(--border-light);
@@ -1217,17 +1224,18 @@ body {
 
 .nav-title h1 {
     font-size: 1.8rem;
-    color: var(--text-dark);
+    color: var(--white);
     margin-bottom: 0.25rem;
 }
 
 .nav-title p {
-    color: var(--text-medium);
+    color: var(--white);
+    opacity: 0.85;
     font-size: 0.9rem;
 }
 
 .back-btn {
-    color: var(--text-medium);
+    color: var(--white);
     text-decoration: none;
     display: flex;
     align-items: center;
@@ -1236,13 +1244,13 @@ body {
     transition: all var(--transition-fast);
     padding: 0.75rem 1rem;
     border-radius: 8px;
-    border: 1px solid var(--border-light);
+    border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 .back-btn:hover {
     color: var(--accent-primary);
     border-color: var(--accent-primary);
-    background: var(--tertiary-bg);
+    background: rgba(255, 255, 255, 0.1);
 }
 
 .nav-actions {
@@ -1377,15 +1385,16 @@ body {
 
 .section-header {
     padding: 1.5rem 2rem 1rem;
-    border-bottom: 1px solid var(--border-light);
+    background: var(--text-dark); /* World Space Council navy */
     display: flex;
     justify-content: space-between;
     align-items: center;
+    border-radius: 8px 8px 0 0;
 }
 
 .section-header h2 {
     font-size: 1.3rem;
-    color: var(--text-dark);
+    color: var(--white);
     display: flex;
     align-items: center;
     gap: 0.5rem;
@@ -1857,7 +1866,6 @@ body {
     min-height: 100px;
     line-height: 1.5;
     font-family: inherit;
-    font-size: 0.9rem;
 }
 
 /* Event section in edit forms */
@@ -2496,11 +2504,6 @@ body {
     .modal-content {
         width: 95%;
     }
-    
-    .modal-header,
-    .modal-body {
-        padding: 1rem;
-    }
 }
 
 /* 1051-1150: Preview Panel Styles */
@@ -2891,6 +2894,7 @@ body {
 }
 
 #editPreviewBtn:hover,
+
 #deletePreviewBtn:hover {
     pointer-events: auto !important;
     cursor: pointer !important;
@@ -3184,16 +3188,17 @@ body {
 /*  View Toggle Buttons */
 .view-toggle-buttons {
     display: flex;
-    background: var(--secondary-bg);
+    background: var(--text-dark); /* World Space Council navy */
     border-radius: 8px;
     padding: 4px;
-    border: 1px solid var(--border-light);
+    border: 1px solid rgba(255, 255, 255, 0.2);
     margin-left: auto;
 }
 
 .view-toggle-btn {
     background: transparent;
-    color: var(--text-medium);
+    color: var(--white);
+    opacity: 0.7;
     border: none;
     padding: 0.6rem 1rem;
     border-radius: 6px;
@@ -3208,18 +3213,20 @@ body {
 }
 
 .view-toggle-btn:hover {
-    background: var(--tertiary-bg);
-    color: var(--text-dark);
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--white);
+    opacity: 0.9;
 }
 
 .view-toggle-btn.active {
-    background: var(--accent-primary);
+    background: var(--accent-primary); /* World Space Council orange */
     color: var(--white);
+    opacity: 1;
     box-shadow: var(--shadow-soft);
 }
 
 .view-toggle-btn.active:hover {
-    background: var(--accent-secondary);
+    background: var(--accent-secondary); /* Darker orange */
 }
 
 /* Card Approval Status */
@@ -3794,4 +3801,24 @@ body {
     font-size: 0.85rem;
     color: #64748b;
     margin-top: 5px;
+}
+
+/* World Space Council attribution */
+.wsc-attribution {
+    margin-top: 8px;
+    font-size: 0.85rem;
+    font-style: italic;
+    color: var(--accent-primary);
+    font-weight: 500;
+}
+
+.logo-placeholder {
+    color: var(--text-dark);
+    background: var(--white);
+    border: 2px solid var(--accent-primary);
+}
+
+.logo-section span {
+    color: var(--text-dark);
+    font-weight: 600;
 }
