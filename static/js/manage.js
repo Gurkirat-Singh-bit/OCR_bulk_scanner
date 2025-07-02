@@ -1288,9 +1288,13 @@ function handleEditCard(button) {
         countryInput.dataset.flag = country ? country.flag : '🌍';
     }
     
-    // Store card ID for saving
+    // Populate label select dropdown
+    populateEditLabelSelect(cardData.label_id);
+    
+    // Store card ID and current data for saving
     const editForm = document.getElementById('editCardForm');
     editForm.dataset.cardId = cardData.id;
+    editForm.dataset.cardData = JSON.stringify(cardData);
     
     // Setup form submission if not already done
     if (!editForm.hasAttribute('data-listener')) {
@@ -1301,11 +1305,65 @@ function handleEditCard(button) {
     showModal('editCardModal');
 }
 
+// Function to populate the label select dropdown in edit modal
+function populateEditLabelSelect(selectedLabelId) {
+    const labelSelect = document.getElementById('editLabelSelect');
+    if (!labelSelect) {
+        console.error('Label select element not found');
+        return;
+    }
+    
+    // Clear existing options except the first "No Label" option
+    while (labelSelect.children.length > 1) {
+        labelSelect.removeChild(labelSelect.lastChild);
+    }
+    
+    // Fetch labels from API
+    fetch('/api/labels')
+        .then(response => response.json())
+        .then(data => {
+            if (data.success && data.labels) {
+                // Add option for each label
+                data.labels.forEach(label => {
+                    const option = document.createElement('option');
+                    option.value = label.id;
+                    option.textContent = label.name;
+                    option.dataset.labelName = label.name;
+                    option.dataset.labelColor = label.color;
+                    
+                    // Add color indicator
+                    const labelHTML = `<span class="label-color-dot" style="background-color: ${label.color};"></span> ${label.name}`;
+                    option.innerHTML = labelHTML;
+                    
+                    labelSelect.appendChild(option);
+                });
+                
+                // Set selected value if provided
+                if (selectedLabelId) {
+                    labelSelect.value = selectedLabelId;
+                }
+            } else {
+                console.error('Failed to load labels:', data.message || 'Unknown error');
+            }
+        })
+        .catch(error => {
+            console.error('Error loading labels:', error);
+        });
+}
+
 function handleSaveCard(e) {
     e.preventDefault();
     
     const form = e.target;
     const cardId = form.dataset.cardId;
+    let cardData = {};
+    
+    // Get stored card data if available
+    try {
+        cardData = JSON.parse(form.dataset.cardData || '{}');
+    } catch (err) {
+        console.error('Error parsing stored card data:', err);
+    }
     
     const updatedData = {
         name: document.getElementById('editName').value.trim(),
@@ -1326,6 +1384,7 @@ function handleSaveCard(e) {
     
     showLoading('Saving changes...');
     
+    // First save the basic card data
     fetch(`/api/cards/${cardId}`, {
         method: 'PUT',
         headers: {
@@ -1335,13 +1394,98 @@ function handleSaveCard(e) {
     })
     .then(response => response.json())
     .then(data => {
-        hideLoading();
         if (data.success) {
-            showToast('Card updated successfully!', 'success');
-            hideModal('editCardModal');
-            // Refresh the page to update the UI
-            setTimeout(() => window.location.reload(), 1000);
+            // Now handle label assignment if needed
+            const labelSelect = document.getElementById('editLabelSelect');
+            const labelId = labelSelect?.value;
+            
+            // If no select element found
+            if (!labelSelect) {
+                hideLoading();
+                showToast('Card updated successfully!', 'success');
+                hideModal('editCardModal');
+                // Refresh the page to update the UI
+                setTimeout(() => window.location.reload(), 1000);
+                return;
+            }
+            
+            // If "--No Label--" is selected and card currently has a label, remove it
+            if (!labelId && cardData.label_id) {
+                fetch(`/api/cards/${cardId}/label`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                })
+                .then(response => response.json())
+                .then(labelData => {
+                    hideLoading();
+                    if (labelData.success) {
+                        showToast('Card updated and label removed successfully!', 'success');
+                    } else {
+                        showToast('Card updated but label removal failed', 'warning');
+                    }
+                    hideModal('editCardModal');
+                    // Refresh the page to update the UI
+                    setTimeout(() => window.location.reload(), 1000);
+                })
+                .catch(labelError => {
+                    hideLoading();
+                    console.error('Error removing label:', labelError);
+                    showToast('Card updated but label removal failed', 'warning');
+                    hideModal('editCardModal');
+                    // Refresh the page to update the UI
+                    setTimeout(() => window.location.reload(), 1000);
+                });
+                return;
+            }
+            
+            // If no label is selected (and card had no label before)
+            if (!labelId) {
+                hideLoading();
+                showToast('Card updated successfully!', 'success');
+                hideModal('editCardModal');
+                // Refresh the page to update the UI
+                setTimeout(() => window.location.reload(), 1000);
+                return;
+            }
+            
+            // If there's a label selected, assign it to the card
+            const selectedOption = labelSelect.options[labelSelect.selectedIndex];
+            const labelName = selectedOption.dataset.labelName || selectedOption.text;
+            
+            fetch(`/api/cards/${cardId}/label`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    label_id: parseInt(labelId),
+                    label_name: labelName
+                })
+            })
+            .then(response => response.json())
+            .then(labelData => {
+                hideLoading();
+                if (labelData.success) {
+                    showToast('Card updated and label assigned successfully!', 'success');
+                } else {
+                    showToast('Card updated but label assignment failed', 'warning');
+                }
+                hideModal('editCardModal');
+                // Refresh the page to update the UI
+                setTimeout(() => window.location.reload(), 1000);
+            })
+            .catch(labelError => {
+                hideLoading();
+                console.error('Error assigning label:', labelError);
+                showToast('Card updated but label assignment failed', 'warning');
+                hideModal('editCardModal');
+                // Refresh the page to update the UI
+                setTimeout(() => window.location.reload(), 1000);
+            });
         } else {
+            hideLoading();
             showToast(data.message || 'Failed to update card', 'error');
         }
     })
