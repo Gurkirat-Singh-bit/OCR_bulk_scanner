@@ -5,6 +5,9 @@ import time
 from app.ocr import extract_data_from_image_gemini
 from app.mongo import load_extraction_data, add_extraction_record, update_extraction_record, delete_extraction_record, get_recent_extractions
 from app.utils import save_uploaded_file, generate_excel_from_mongo, cleanup_temp_files, allowed_file, generate_advanced_analytics_report, generate_filtered_excel_by_labels, generate_filtered_excel_by_countries
+from datetime import datetime, timedelta
+from functools import wraps
+from werkzeug.security import generate_password_hash, check_password_hash
 
 # 11-20: Blueprint creation
 main_bp = Blueprint('main', __name__)
@@ -388,6 +391,283 @@ def api_upload():
             
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
+# API Authentication decorator
+def token_required(f):
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        token = request.headers.get('Authorization')
+        
+        if not token:
+            return jsonify({'success': False, 'message': 'Token is missing'}), 401
+        
+        try:
+            # Remove 'Bearer ' prefix if present
+            if token.startswith('Bearer '):
+                token = token[7:]
+            
+            # For now, we'll use a simple token validation
+            # In production, you should use proper JWT validation
+            api_users = current_app.config.get('API_USERS', {})
+            if token not in api_users:
+                return jsonify({'success': False, 'message': 'Token is invalid'}), 401
+                
+        except Exception as e:
+            return jsonify({'success': False, 'message': 'Token is invalid'}), 401
+        
+        return f(*args, **kwargs)
+    return decorated
+
+# API Routes
+@main_bp.route('/api/auth/register', methods=['POST'])
+def api_register():
+    """
+    Register a new API user and generate token
+    """
+    try:
+        data = request.get_json()
+        username = data.get('username')
+        email = data.get('email')
+        password = data.get('password')
+        usage = data.get('usage', '')
+        
+        if not all([username, email, password]):
+            return jsonify({'success': False, 'message': 'Missing required fields'}), 400
+        
+        # Generate a simple API token (in production, use proper JWT)
+        import secrets
+        api_token = secrets.token_urlsafe(32)
+        
+        # Store user data (in production, use a proper database)
+        api_users = current_app.config.setdefault('API_USERS', {})
+        api_users[api_token] = {
+            'username': username,
+            'email': email,
+            'usage': usage,
+            'created_at': datetime.now().isoformat()
+        }
+        
+        return jsonify({
+            'success': True,
+            'api_key': api_token,
+            'message': 'API key generated successfully'
+        })
+        
+    except Exception as e:
+        print(f"Error in API registration: {str(e)}")
+        return jsonify({'success': False, 'message': 'Internal server error'}), 500
+
+@main_bp.route('/api/auth/token', methods=['POST'])
+def api_login():
+    """
+    Generate token for existing user (simplified version)
+    """
+    try:
+        data = request.get_json()
+        username = data.get('username')
+        password = data.get('password')
+        
+        if not all([username, password]):
+            return jsonify({'success': False, 'message': 'Missing credentials'}), 400
+        
+        # For demo purposes, accept any username/password and generate token
+        # In production, validate against database
+        import secrets
+        api_token = secrets.token_urlsafe(32)
+        
+        # Store user data
+        api_users = current_app.config.setdefault('API_USERS', {})
+        api_users[api_token] = {
+            'username': username,
+            'created_at': datetime.now().isoformat()
+        }
+        
+        return jsonify({
+            'success': True,
+            'token': api_token,
+            'expires_in': 86400  # 24 hours
+        })
+        
+    except Exception as e:
+        print(f"Error in API login: {str(e)}")
+        return jsonify({'success': False, 'message': 'Internal server error'}), 500
+
+@main_bp.route('/api/ocr', methods=['POST'])
+@token_required
+def api_ocr_extract():
+    """
+    API endpoint for OCR extraction
+    """
+    try:
+        # Validate uploaded files
+        if 'files' not in request.files:
+            return jsonify({'success': False, 'message': 'No files provided'}), 400
+        
+        uploaded_files = request.files.getlist('files')
+        
+        if not uploaded_files or all(file.filename == '' for file in uploaded_files):
+            return jsonify({'success': False, 'message': 'No files selected'}), 400
+        
+        # Extract event information from form (optional)
+        event_info = {
+            'event_name': request.form.get('event_name', '').strip(),
+            'event_description': request.form.get('event_description', '').strip(),
+            'event_host': request.form.get('event_host', '').strip(),
+            'event_date': request.form.get('event_date', '').strip(),
+            'event_location': request.form.get('event_location', '').strip()
+        }
+        
+        processed_data = []
+        
+        for i, file in enumerate(uploaded_files):
+            if file and allowed_file(file.filename):
+                try:
+                    # Save uploaded file
+                    file_path = save_uploaded_file(file)
+                    
+                    if file_path:
+                        # Extract data using Gemini Vision API
+                        print(f"🔍 Processing file {i+1}/{len(uploaded_files)}: {file.filename}")
+                        
+                        extracted_data = extract_data_from_image_gemini(file_path)
+                        
+                        if extracted_data:
+                            # Add event information to extracted data
+                            extracted_data.update(event_info)
+                            extracted_data['filename'] = file.filename
+                            processed_data.append(extracted_data)
+                            
+                            # Save to MongoDB
+                            add_extraction_record(extracted_data)
+                        
+                        # Clean up uploaded file
+                        cleanup_temp_files([file_path])
+                        
+                except Exception as file_error:
+                    print(f"❌ Error processing file {file.filename}: {str(file_error)}")
+                    continue
+        
+        if processed_data:
+            return jsonify({
+                'success': True,
+                'message': f'Successfully processed {len(processed_data)} files',
+                'data': processed_data,
+                'total_processed': len(processed_data)
+            })
+        else:
+            return jsonify({
+                'success': False,
+                'message': 'No files could be processed successfully'
+            }), 400
+            
+    except Exception as e:
+        print(f"❌ Error in API OCR extraction: {str(e)}")
+        return jsonify({'success': False, 'message': 'Internal server error'}), 500
+
+@main_bp.route('/api/cards', methods=['GET'])
+@token_required
+def api_get_cards():
+    """
+    Get all extracted card data via API
+    """
+    try:
+        # Get query parameters
+        limit = request.args.get('limit', 50, type=int)
+        offset = request.args.get('offset', 0, type=int)
+        
+        # Get recent extractions from MongoDB
+        cards = get_recent_extractions(limit=limit, skip=offset)
+        
+        return jsonify({
+            'success': True,
+            'data': cards,
+            'count': len(cards),
+            'limit': limit,
+            'offset': offset
+        })
+        
+    except Exception as e:
+        print(f"Error in API get cards: {str(e)}")
+        return jsonify({'success': False, 'message': 'Internal server error'}), 500
+
+@main_bp.route('/api/cards/<int:card_id>', methods=['GET'])
+@token_required
+def api_get_card(card_id):
+    """
+    Get specific card data by ID via API
+    """
+    try:
+        from app.mongo import get_card_with_image
+        
+        card = get_card_with_image(card_id)
+        
+        if card:
+            return jsonify({
+                'success': True,
+                'data': card
+            })
+        else:
+            return jsonify({
+                'success': False,
+                'message': 'Card not found'
+            }), 404
+            
+    except Exception as e:
+        print(f"Error in API get card: {str(e)}")
+        return jsonify({'success': False, 'message': 'Internal server error'}), 500
+
+@main_bp.route('/api/cards/<int:card_id>', methods=['PUT'])
+@token_required
+def api_update_card(card_id):
+    """
+    Update card data via API
+    """
+    try:
+        from app.mongo import update_card_data
+        
+        data = request.get_json()
+        
+        # Validate allowed fields
+        allowed_fields = ['name', 'company', 'email', 'phone', 'website', 'designation', 'country', 'flag',
+                         'event_name', 'event_description', 'event_host', 'event_date', 'event_location']
+        update_data = {k: v for k, v in data.items() if k in allowed_fields}
+        
+        if update_card_data(card_id, update_data):
+            return jsonify({
+                'success': True,
+                'message': 'Card updated successfully'
+            })
+        else:
+            return jsonify({
+                'success': False,
+                'message': 'Failed to update card or card not found'
+            }), 404
+            
+    except Exception as e:
+        print(f"Error in API update card: {str(e)}")
+        return jsonify({'success': False, 'message': 'Internal server error'}), 500
+
+@main_bp.route('/api/cards/<int:card_id>', methods=['DELETE'])
+@token_required
+def api_delete_card(card_id):
+    """
+    Delete card data via API
+    """
+    try:
+        if delete_extraction_record(card_id):
+            return jsonify({
+                'success': True,
+                'message': 'Card deleted successfully'
+            })
+        else:
+            return jsonify({
+                'success': False,
+                'message': 'Failed to delete card or card not found'
+            }), 404
+            
+    except Exception as e:
+        print(f"Error in API delete card: {str(e)}")
+        return jsonify({'success': False, 'message': 'Internal server error'}), 500
 
 # 121-160: Data management interface routes
 @main_bp.route('/manage')

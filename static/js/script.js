@@ -56,6 +56,32 @@ document.addEventListener('DOMContentLoaded', function() {
 
         // Auto-hide alerts
         setTimeout(hideAlerts, 5000);
+
+        // API button events
+        const apiDocsBtn = document.getElementById('apiDocsBtn');
+        const getApiKeyBtn = document.getElementById('getApiKeyBtn');
+        const viewDocsBtn = document.getElementById('viewDocsBtn');
+        
+        if (apiDocsBtn) {
+            apiDocsBtn.addEventListener('click', function() {
+                console.log('API docs button clicked');
+                // This will be handled by api.js
+            });
+        }
+        
+        if (getApiKeyBtn) {
+            getApiKeyBtn.addEventListener('click', function() {
+                console.log('Get API key button clicked');
+                // This will be handled by api.js
+            });
+        }
+        
+        if (viewDocsBtn) {
+            viewDocsBtn.addEventListener('click', function() {
+                console.log('View docs button clicked');
+                // This will be handled by api.js
+            });
+        }
     }
 
     // 41-60: Drag and drop functionality

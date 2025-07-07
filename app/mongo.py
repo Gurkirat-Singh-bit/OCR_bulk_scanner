@@ -172,18 +172,19 @@ def delete_extraction_record(record_id):
         return False
 
 # 81-90: Get recent extractions
-def get_recent_extractions(limit=5):
+def get_recent_extractions(limit=5, skip=0):
     """
-    Get recent extraction records from MongoDB
+    Get recent extraction records from MongoDB with pagination
     Returns list of most recent records
     """
     try:
-        # Query recent records
+        # Query recent records with pagination
         records = list(collection.find({}, {'_id': 0})
                       .sort('created_at', -1)
+                      .skip(skip)
                       .limit(limit))
         
-        print(f"📊 Retrieved {len(records)} recent records from MongoDB")
+        print(f"📊 Retrieved {len(records)} recent records from MongoDB (skip: {skip}, limit: {limit})")
         return records
         
     except Exception as e:

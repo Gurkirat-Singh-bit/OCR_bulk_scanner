@@ -4,7 +4,7 @@
     <!-- 1-10: Page meta information and external resources -->
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Visiting Card OCR Extractor | World Space Council</title>
+    <title>Business Card OCR API | Extract Contact Data</title>
     <link rel="icon" type="image/png" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAACXBIWXMAAAsTAAALEwEAmpwYAAABpUlEQVR4nO2WTytEYRTGf8NChEKzUBZkY2FhNVZTfgMln0A+gfIJlE9gvoHyCSxsLNhYKAsWUhIWKH82KM/cdTvce+feuZP5A/PU7XbPec/znHPPey78V1ADGOAPwBeQAV4ZUEANMAHsgIuIeAM2gVFgNisRdcAssA+8O5LFxSOwAQwD9VmIqAVGpPDTFJL/iwdgFegDatIU0SH3S1nqeokdmVNXtIAq4P4HFl8DDil2AscU52TeBVAZR0ATcFzkxDf8ngF6hcduehaYj3LmgbZfWnwbmAXOgTRs+uk30iL5xaJdRbF+Dlwy4EtFvZYcxJ9L7gKD5e4OCvUZsCDcJXXTbcuS+8C0HOsRkjEvXq0J/MqQHwKN0me2RcGRjOsT7lPbcxSyRhIUZDLvJ7AlBfPCnUkWgHo57CyyZpnfwKDwN7J/BjwHRzJmPIXLZVa8uiV2Av0KcX4L1AVymzzFM6JiTa71WAKyqTwzD5zIQbsrRo0o8mphXvLmT90E1AeeSxo8kO8LNr5a73AtSr5IDvW5ROOoUG4HbeDRXFyJ+woLFsvUAdtZ/LH8qvgAn30rgWu4ZiwAAAAASUVORK5CYII=">
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -22,8 +22,8 @@
         <!-- Header section -->
         <header class="app-header fade-in">
             <div class="header-content">
-                <h1><i class="fas fa-id-card-clip"></i> Visiting Card OCR</h1>
-                <p class="subtitle">Extract structured data from business cards instantly</p>
+                <h1><i class="fas fa-id-card-clip"></i> Business Card OCR API</h1>
+                <p class="subtitle">Extract structured data from business cards instantly with our RESTful API</p>
             </div>
         </header>
 
@@ -125,32 +125,70 @@
                     <div class="section-header">
                         <h2><i class="fas fa-lightbulb"></i> How It Works</h2>
                     </div>
-                    <div class="info-content">
+                    <div class="info-content compact">
                         <div class="info-step">
                             <div class="step-number">1</div>
                             <div class="step-content">
-                                <h4>Upload Cards</h4>
-                                <p>Drag and drop or select multiple business card images</p>
+                                <h4>Upload</h4>
+                                <p>Select business card images</p>
                             </div>
                         </div>
                         <div class="info-step">
                             <div class="step-number">2</div>
                             <div class="step-content">
-                                <h4>AI Processing</h4>
-                                <p>Advanced OCR extracts names, emails, phones, and companies</p>
+                                <h4>Extract</h4>
+                                <p>AI processes and extracts data</p>
                             </div>
                         </div>
                         <div class="info-step">
                             <div class="step-number">3</div>
                             <div class="step-content">
-                                <h4>Excel Export</h4>
-                                <p>Structured data is automatically saved to output.xlsx</p>
+                                <h4>Export</h4>
+                                <p>Download structured Excel file</p>
                             </div>
                         </div>
-                        <div class="feature-badges">
-                            <span class="badge"><i class="fas fa-bolt"></i> Fast</span>
-                            <span class="badge"><i class="fas fa-shield-alt"></i> Secure</span>
-                            <span class="badge"><i class="fas fa-download"></i> Exportable</span>
+                    </div>
+                </section>
+
+                <!-- API Section -->
+                <section class="api-section card-light">
+                    <div class="section-header">
+                        <h2><i class="fas fa-code"></i> API Access</h2>
+                    </div>
+                    <div class="api-content">
+                        <div class="api-endpoints">
+                            <div class="api-endpoint" data-endpoint="ocr">
+                                <div class="endpoint-header">
+                                    <span class="method post">POST</span>
+                                    <span class="path">/api/ocr</span>
+                                    <i class="fas fa-chevron-down toggle-icon"></i>
+                                </div>
+                                <p class="endpoint-desc">Extract text from business card images</p>
+                            </div>
+                            <div class="api-endpoint" data-endpoint="cards">
+                                <div class="endpoint-header">
+                                    <span class="method get">GET</span>
+                                    <span class="path">/api/cards</span>
+                                    <i class="fas fa-chevron-down toggle-icon"></i>
+                                </div>
+                                <p class="endpoint-desc">Get all extracted card data</p>
+                            </div>
+                            <div class="api-endpoint" data-endpoint="token">
+                                <div class="endpoint-header">
+                                    <span class="method post">POST</span>
+                                    <span class="path">/api/auth/token</span>
+                                    <i class="fas fa-chevron-down toggle-icon"></i>
+                                </div>
+                                <p class="endpoint-desc">Generate API access token</p>
+                            </div>
+                        </div>
+                        <div class="api-actions">
+                            <button class="api-btn" id="getApiKeyBtn">
+                                <i class="fas fa-key"></i> Get API Key
+                            </button>
+                            <button class="api-btn secondary" id="viewDocsBtn">
+                                <i class="fas fa-book"></i> View Docs
+                            </button>
                         </div>
                     </div>
                 </section>
@@ -221,29 +259,29 @@
                     </div>
                 </section>
 
-                <!-- Footer/Portfolio section (bottom-right) -->
+                <!-- Footer/Development section (bottom-right) -->
                 <section class="portfolio-section card-light">
                     <div class="portfolio-content">
                         <div class="logo-section">
                             <div class="logo-placeholder">
-                                <i class="fas fa-rocket"></i>
-                                <span>World Space Council</span>
+                                <i class="fas fa-code"></i>
+                                <span>OCR Scanner API</span>
                             </div>
                         </div>
                         <div class="portfolio-info">
-                            <h3>Built with ❤️</h3>
-                            <p>Powered by Flask, Tesseract OCR, and modern web technologies</p>
-                            <p class="wsc-attribution">A World Space Council technology solution</p>
+                            <h3>Developer Tools</h3>
+                            <p>RESTful API for business card OCR integration</p>
+                            <p class="tech-stack">Flask • Tesseract • MongoDB • JWT Auth</p>
                         </div>
                         <div class="portfolio-actions">
-                            <a href="#" target="_blank" class="portfolio-btn" id="portfolioBtn">
-                                <i class="fas fa-external-link-alt"></i> Visit Portfolio
-                            </a>
+                            <button class="portfolio-btn" id="apiDocsBtn">
+                                <i class="fas fa-file-code"></i> API Documentation
+                            </button>
                             <a href="https://github.com" target="_blank" class="social-btn">
                                 <i class="fab fa-github"></i>
                             </a>
-                            <a href="https://linkedin.com" target="_blank" class="social-btn">
-                                <i class="fab fa-linkedin"></i>
+                            <a href="https://docs.python.org" target="_blank" class="social-btn">
+                                <i class="fab fa-python"></i>
                             </a>
                         </div>
                     </div>
@@ -274,7 +312,262 @@
         <span>Data extracted successfully!</span>
     </div>
 
+    <!-- API Documentation Modal -->
+    <div class="modal-overlay" id="apiModalOverlay">
+        <div class="api-modal">
+            <div class="modal-header">
+                <h2><i class="fas fa-file-code"></i> API Documentation</h2>
+                <button class="close-modal" id="closeApiModal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-content">
+                <div class="api-tabs">
+                    <button class="tab-btn active" data-tab="overview">Overview</button>
+                    <button class="tab-btn" data-tab="auth">Authentication</button>
+                    <button class="tab-btn" data-tab="endpoints">Endpoints</button>
+                    <button class="tab-btn" data-tab="examples">Code Examples</button>
+                </div>
+                
+                <div class="tab-content active" id="overview">
+                    <h3>API Overview</h3>
+                    <p>The Business Card OCR API allows you to extract structured data from business card images programmatically.</p>
+                    <div class="api-features">
+                        <div class="feature">
+                            <i class="fas fa-bolt"></i>
+                            <span>Fast processing with AI-powered OCR</span>
+                        </div>
+                        <div class="feature">
+                            <i class="fas fa-shield-alt"></i>
+                            <span>Secure JWT-based authentication</span>
+                        </div>
+                        <div class="feature">
+                            <i class="fas fa-database"></i>
+                            <span>Structured JSON responses</span>
+                        </div>
+                    </div>
+                    <div class="base-url">
+                        <strong>Base URL:</strong> <code>https://your-domain.com/api</code>
+                    </div>
+                </div>
+
+                <div class="tab-content" id="auth">
+                    <h3>Authentication</h3>
+                    <p>All API requests require a valid JWT token. Include it in the Authorization header.</p>
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span>Request Header</span>
+                            <button class="copy-btn" data-copy="auth-header">Copy</button>
+                        </div>
+                        <pre><code id="auth-header">Authorization: Bearer YOUR_JWT_TOKEN</code></pre>
+                    </div>
+                    <h4>Get API Token</h4>
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span>POST /api/auth/token</span>
+                            <button class="copy-btn" data-copy="auth-request">Copy</button>
+                        </div>
+                        <pre><code id="auth-request">{
+  "username": "your_username",
+  "password": "your_password"
+}</code></pre>
+                    </div>
+                </div>
+
+                <div class="tab-content" id="endpoints">
+                    <h3>Available Endpoints</h3>
+                    <div class="endpoint-docs">
+                        <div class="endpoint-item">
+                            <div class="endpoint-title">
+                                <span class="method post">POST</span>
+                                <span>/api/ocr</span>
+                            </div>
+                            <p>Extract data from business card images</p>
+                            <div class="endpoint-params">
+                                <strong>Parameters:</strong>
+                                <ul>
+                                    <li><code>files</code> (form-data): Image files to process</li>
+                                    <li><code>event_name</code> (optional): Event name</li>
+                                </ul>
+                            </div>
+                        </div>
+                        <div class="endpoint-item">
+                            <div class="endpoint-title">
+                                <span class="method get">GET</span>
+                                <span>/api/cards</span>
+                            </div>
+                            <p>Retrieve all extracted card data</p>
+                        </div>
+                        <div class="endpoint-item">
+                            <div class="endpoint-title">
+                                <span class="method get">GET</span>
+                                <span>/api/cards/{id}</span>
+                            </div>
+                            <p>Get specific card data by ID</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="tab-content" id="examples">
+                    <h3>Code Examples</h3>
+                    <div class="language-tabs">
+                        <button class="lang-btn active" data-lang="python">Python</button>
+                        <button class="lang-btn" data-lang="javascript">JavaScript</button>
+                        <button class="lang-btn" data-lang="php">PHP</button>
+                    </div>
+                    
+                    <div class="lang-content active" id="python">
+                        <div class="code-block">
+                            <div class="code-header">
+                                <span>Python Example</span>
+                                <button class="copy-btn" data-copy="python-code">Copy</button>
+                            </div>
+                            <pre><code id="python-code">import requests
+
+# Get API token
+auth_response = requests.post('https://your-domain.com/api/auth/token', json={
+    'username': 'your_username',
+    'password': 'your_password'
+})
+token = auth_response.json()['token']
+
+# Upload and process business card
+headers = {'Authorization': f'Bearer {token}'}
+files = {'files': open('business_card.jpg', 'rb')}
+response = requests.post('https://your-domain.com/api/ocr', 
+                        headers=headers, files=files)
+data = response.json()
+print(data)</code></pre>
+                        </div>
+                    </div>
+
+                    <div class="lang-content" id="javascript">
+                        <div class="code-block">
+                            <div class="code-header">
+                                <span>JavaScript Example</span>
+                                <button class="copy-btn" data-copy="js-code">Copy</button>
+                            </div>
+                            <pre><code id="js-code">// Get API token
+const authResponse = await fetch('https://your-domain.com/api/auth/token', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+        username: 'your_username',
+        password: 'your_password'
+    })
+});
+const { token } = await authResponse.json();
+
+// Upload business card
+const formData = new FormData();
+formData.append('files', fileInput.files[0]);
+
+const response = await fetch('https://your-domain.com/api/ocr', {
+    method: 'POST',
+    headers: { 'Authorization': `Bearer ${token}` },
+    body: formData
+});
+const data = await response.json();
+console.log(data);</code></pre>
+                        </div>
+                    </div>
+
+                    <div class="lang-content" id="php">
+                        <div class="code-block">
+                            <div class="code-header">
+                                <span>PHP Example</span>
+                                <button class="copy-btn" data-copy="php-code">Copy</button>
+                            </div>
+                            <pre><code id="php-code"><?php
+// Get API token
+$auth_data = json_encode([
+    'username' => 'your_username',
+    'password' => 'your_password'
+]);
+
+$context = stream_context_create([
+    'http' => [
+        'method' => 'POST',
+        'header' => 'Content-Type: application/json',
+        'content' => $auth_data
+    ]
+]);
+
+$auth_response = file_get_contents('https://your-domain.com/api/auth/token', false, $context);
+$token = json_decode($auth_response, true)['token'];
+
+// Upload business card
+$file = new CURLFile('/path/to/business_card.jpg');
+$post_data = ['files' => $file];
+
+$ch = curl_init();
+curl_setopt($ch, CURLOPT_URL, 'https://your-domain.com/api/ocr');
+curl_setopt($ch, CURLOPT_POST, true);
+curl_setopt($ch, CURLOPT_POSTFIELDS, $post_data);
+curl_setopt($ch, CURLOPT_HTTPHEADER, ['Authorization: Bearer ' . $token]);
+curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+
+$response = curl_exec($ch);
+$data = json_decode($response, true);
+print_r($data);
+?></code></pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- API Key Modal -->
+    <div class="modal-overlay" id="apiKeyModalOverlay">
+        <div class="api-key-modal">
+            <div class="modal-header">
+                <h2><i class="fas fa-key"></i> Get API Key</h2>
+                <button class="close-modal" id="closeApiKeyModal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-content">
+                <form id="apiKeyForm">
+                    <div class="form-group">
+                        <label for="apiUsername">Username</label>
+                        <input type="text" id="apiUsername" name="username" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="apiEmail">Email</label>
+                        <input type="email" id="apiEmail" name="email" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="apiPassword">Password</label>
+                        <input type="password" id="apiPassword" name="password" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="apiUsage">Intended Usage</label>
+                        <textarea id="apiUsage" name="usage" rows="3" placeholder="Describe how you plan to use the API..."></textarea>
+                    </div>
+                    <button type="submit" class="submit-btn">
+                        <i class="fas fa-key"></i> Generate API Key
+                    </button>
+                </form>
+                <div class="api-key-result" id="apiKeyResult" style="display: none;">
+                    <h3>Your API Key</h3>
+                    <div class="key-display">
+                        <input type="text" id="generatedApiKey" readonly>
+                        <button class="copy-btn" id="copyApiKey">
+                            <i class="fas fa-copy"></i>
+                        </button>
+                    </div>
+                    <p class="key-warning">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        Save this key securely. It won't be shown again.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Custom JavaScript -->
     <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/api.js') }}"></script>
 </body>
 </html>
