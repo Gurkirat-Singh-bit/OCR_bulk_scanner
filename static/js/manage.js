@@ -1863,9 +1863,13 @@ function initializeModals() {
 }
 
 function showModal(modalId) {
+    console.log('🔍 showModal called with modalId:', modalId);
     const modal = document.getElementById(modalId);
+    console.log('🔍 Modal element found:', !!modal);
+    
     if (modal) {
         modal.style.display = 'flex';
+        console.log('✅ Modal displayed:', modalId);
         
         // Initialize country autocomplete for edit card modal
         if (modalId === 'editCardModal') {
@@ -1877,6 +1881,8 @@ function showModal(modalId) {
         if (firstInput) {
             setTimeout(() => firstInput.focus(), 100);
         }
+    } else {
+        console.error('❌ Modal not found:', modalId);
     }
 }
 
