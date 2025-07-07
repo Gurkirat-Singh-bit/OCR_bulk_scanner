@@ -4,7 +4,7 @@ import os
 import time
 from app.ocr import extract_data_from_image_gemini
 from app.mongo import load_extraction_data, add_extraction_record, update_extraction_record, delete_extraction_record, get_recent_extractions
-from app.utils import save_uploaded_file, generate_excel_from_mongo, cleanup_temp_files, allowed_file
+from app.utils import save_uploaded_file, generate_excel_from_mongo, cleanup_temp_files, allowed_file, generate_advanced_analytics_report, generate_filtered_excel_by_labels, generate_filtered_excel_by_countries
 
 # 11-20: Blueprint creation
 main_bp = Blueprint('main', __name__)
@@ -246,6 +246,87 @@ def download_excel():
     except Exception as e:
         print(f"❌ Error downloading Excel file: {str(e)}")
         flash(f'Error downloading file: {str(e)}', 'error')
+        return redirect(url_for('main.index'))
+
+@main_bp.route('/download/advanced')
+def download_advanced_report():
+    """
+    Route to generate and download advanced analytics Excel report
+    """
+    try:
+        print("📊 Download request for advanced analytics report")
+        
+        # Generate advanced Excel report with charts and analytics
+        excel_buffer = generate_advanced_analytics_report()
+        
+        if excel_buffer:
+            print("✅ Sending advanced analytics report to user")
+            return send_file(
+                excel_buffer, 
+                as_attachment=True, 
+                download_name='visiting_cards_analytics_report.xlsx',
+                mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+            )
+        else:
+            print("❌ No data available for advanced report")
+            flash('No data available for advanced report. Please process some cards first.', 'warning')
+            return redirect(url_for('main.index'))
+            
+    except Exception as e:
+        print(f"❌ Error generating advanced report: {str(e)}")
+        flash(f'Error generating advanced report: {str(e)}', 'error')
+        return redirect(url_for('main.index'))
+
+@main_bp.route('/download/filtered')
+def download_filtered_export():
+    """
+    Route to generate and download filtered Excel export based on labels or countries
+    """
+    try:
+        print("🏷️ Download request for filtered export")
+        
+        export_type = request.args.get('type', '')
+        
+        if export_type == 'labels':
+            # Get selected label IDs and unlabeled option
+            label_ids = request.args.getlist('labels')
+            include_unlabeled = request.args.get('include_unlabeled') == 'true'
+            
+            # Convert label IDs to integers
+            label_ids = [int(id) for id in label_ids if id.isdigit()]
+            
+            print(f"📋 Filtering by labels: {label_ids}, include unlabeled: {include_unlabeled}")
+            excel_buffer = generate_filtered_excel_by_labels(label_ids, include_unlabeled)
+            filename = 'visiting_cards_filtered_by_labels.xlsx'
+            
+        elif export_type == 'countries':
+            # Get selected countries
+            countries = request.args.getlist('countries')
+            
+            print(f"🌍 Filtering by countries: {countries}")
+            excel_buffer = generate_filtered_excel_by_countries(countries)
+            filename = 'visiting_cards_filtered_by_countries.xlsx'
+            
+        else:
+            flash('Invalid export type specified', 'error')
+            return redirect(url_for('main.index'))
+        
+        if excel_buffer:
+            print("✅ Sending filtered export to user")
+            return send_file(
+                excel_buffer, 
+                as_attachment=True, 
+                download_name=filename,
+                mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+            )
+        else:
+            print("❌ No data available for filtered export")
+            flash('No data matches the selected filters.', 'warning')
+            return redirect(url_for('main.index'))
+            
+    except Exception as e:
+        print(f"❌ Error generating filtered export: {str(e)}")
+        flash(f'Error generating filtered export: {str(e)}', 'error')
         return redirect(url_for('main.index'))
 
 @main_bp.route('/api/progress/<session_id>')
