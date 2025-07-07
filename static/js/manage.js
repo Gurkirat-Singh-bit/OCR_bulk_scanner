@@ -395,12 +395,29 @@ function setupEventListeners() {
     const createLabelBtn = document.getElementById('createLabelBtn');
     const createFirstLabel = document.getElementById('createFirstLabel');
     
+    console.log('🔍 Button elements found:', {
+        createLabelBtn: !!createLabelBtn,
+        createFirstLabel: !!createFirstLabel
+    });
+    
     if (createLabelBtn) {
-        createLabelBtn.addEventListener('click', () => showModal('createLabelModal'));
+        createLabelBtn.addEventListener('click', function(e) {
+            console.log('🏷️ Create Label Button clicked!', e);
+            e.preventDefault();
+            showModal('createLabelModal');
+        });
+        console.log('✅ Create label button listener added');
+    } else {
+        console.error('❌ Create label button not found!');
     }
     
     if (createFirstLabel) {
-        createFirstLabel.addEventListener('click', () => showModal('createLabelModal'));
+        createFirstLabel.addEventListener('click', function(e) {
+            console.log('🏷️ Create First Label Button clicked!', e);
+            e.preventDefault();
+            showModal('createLabelModal');
+        });
+        console.log('✅ Create first label button listener added');
     }
     
     // Export button

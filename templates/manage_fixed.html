@@ -1,0 +1,665 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <!-- Page meta information and external resources -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Data Management - Visiting Card OCR | World Space Council</title>
+    <link rel="icon" type="image/png" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAACXBIWXMAAAsTAAALEwEAmpwYAAABpUlEQVR4nO2WTytEYRTGf8NChEKzUBZkY2FhNVZTfgMln0A+gfIJlE9gvoHyCSxsLNhYKAsWUhIWKH82KM/cdTvce+feuZP5A/PU7XbPec/znHPPey78V1ADGOAPwBeQAV4ZUEANMAHsgIuIeAM2gVFgNisRdcAssA+8O5LFxSOwAQwD9VmIqAVGpPDTFJL/iwdgFegDatIU0SH3S1nqeokdmVNXtIAq4P4HFl8DDil2AscU52TeBVAZR0ATcFzkxDf8ngF6hcduehaYj3LmgbZfWnwbmAXOgTRs+uk30iL5xaJdRbF+Dlwy4EtFvZYcxJ9L7gKD5e4OCvUZsCDcJXXTbcuS+8C0HOsRkjEvXq0J/MqQHwKN0me2RcGRjOsT7lPbcxSyRhIUZDLvJ7AlBfPCnUkWgHo57CyyZpnfwKDwN7J/BjwHRzJmPIXLZVa8uiV2Av0KcX4L1AVymzzFM6JiTa71WAKyqTwzD5zIQbsrRo0o8mphXvLmT90E1AeeSxo8kO8LNr5a73AtSr5IDvW5ROOoUG4HbeDRXFyJ+woLFsvUAdtZ/LH8qvgAn30rgWu4ZiwAAAAASUVORK5CYII=">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v=20250702">
+    <!-- SortableJS for drag and drop -->
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+</head>
+<body>
+    <!-- Main container -->
+    <div class="main-container">
+        
+        <!-- Navigation header -->
+        <header class="manage-nav">
+            <div class="nav-content">
+                <a href="{{ url_for('main.index') }}" class="back-btn">
+                    <i class="fas fa-arrow-left"></i> Back to Dashboard
+                </a>
+                <div class="nav-title">
+                    <h1><i class="fas fa-cogs"></i> Data Management</h1>
+                    <p>Organize and manage your extracted business cards</p>
+                </div>
+                <div class="nav-links">
+                    <a href="{{ url_for('main.index') }}" class="nav-link">
+                        <i class="fas fa-home"></i> Dashboard
+                    </a>
+                    <a href="{{ url_for('main.api_docs') }}" class="nav-link">
+                        <i class="fas fa-code"></i> API Docs
+                    </a>
+                    <a href="{{ url_for('main.manage_data') }}" class="nav-link active">
+                        <i class="fas fa-cogs"></i> Manage Data
+                    </a>
+                </div>
+                <div class="nav-actions">
+                    <button class="nav-action-btn" id="createLabelBtn">
+                        <i class="fas fa-plus"></i> New Label
+                    </button>
+                    <button class="nav-action-btn" id="exportBtn">
+                        <i class="fas fa-download"></i> Export Data
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Search and filter bar -->
+        <section class="search-section card-light">
+            <div class="search-controls">
+                <div class="search-input-wrapper">
+                    <i class="fas fa-search"></i>
+                    <input type="text" id="searchInput" placeholder="Search by name, company, email, phone, or country...">
+                    <button id="clearSearch" class="clear-search-btn" style="display: none;">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="filter-controls">
+                    <select id="labelFilter" class="filter-select">
+                        <option value="">All Labels</option>
+                        {% for label in labels %}
+                        <option value="{{ label.id }}">{{ label.name }} ({{ label.card_count }})</option>
+                        {% endfor %}
+                    </select>
+                    <select id="countryFilter" class="filter-select">
+                        <option value="">All Countries</option>
+                    </select>
+                    <button id="resetFilters" class="reset-filters-btn">
+                        <i class="fas fa-undo"></i> Reset
+                    </button>
+                    <div class="view-toggle-buttons">
+                        <button class="view-toggle-btn active" id="normalViewBtn" data-view="normal">
+                            <i class="fas fa-eye"></i> Normal View
+                        </button>
+                        <button class="view-toggle-btn" id="reviewerViewBtn" data-view="reviewer">
+                            <i class="fas fa-clipboard-check"></i> Reviewer View
+                        </button>
+                        <button class="view-toggle-btn" id="galleryViewBtn" data-view="gallery">
+                            <i class="fas fa-th-large"></i> Gallery View
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Main layout with preview panel -->
+        <main class="manage-content">
+            <div class="manage-layout">
+                
+                <!-- Left side: Split view -->
+                <div class="split-view">
+                    
+                    <!-- Unsorted Data Section -->
+                    <section class="unsorted-section">
+                        <div class="section-header">
+                            <h2><i class="fas fa-inbox"></i> Unsorted Cards</h2>
+                            <div class="section-stats">
+                                <span class="card-count" id="unsortedCount">{{ unsorted_cards|length }}</span>
+                            </div>
+                        </div>
+                        <div class="cards-container{% if not unsorted_cards %} empty-container{% endif %}" id="unsortedContainer">
+                            {% for card in unsorted_cards %}
+                            <div class="card-item" data-card-id="{{ card.id }}" data-card-data='{{ card|tojson }}'>
+                                <div class="card-header">
+                                    <div class="card-identity">
+                                        <h3>{{ card.name or 'Unknown Name' }}</h3>
+                                        <div class="card-meta">
+                                            <span class="country-flag">{{ card.flag or '🌍' }}</span>
+                                            <span class="company">{{ card.company or 'No Company' }}</span>
+                                        </div>
+                                    </div>
+                                    <div class="card-actions">
+                                        <button class="action-btn edit-card-btn" title="Edit" data-card-id="{{ card.id }}">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        <button class="action-btn delete-card-btn" title="Delete" data-card-id="{{ card.id }}">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="card-details">
+                                    {% if card.email %}
+                                    <p><i class="fas fa-envelope"></i> {{ card.email }}</p>
+                                    {% endif %}
+                                    {% if card.phone %}
+                                    <p><i class="fas fa-phone"></i> {{ card.phone }}</p>
+                                    {% endif %}
+                                    {% if card.website %}
+                                    <p><i class="fas fa-globe"></i> {{ card.website }}</p>
+                                    {% endif %}
+                                    {% if card.designation %}
+                                    <p><i class="fas fa-user-tie"></i> {{ card.designation }}</p>
+                                    {% endif %}
+                                </div>
+                                <div class="card-footer">
+                                    <div class="drag-instruction">
+                                        <i class="fas fa-arrows-alt"></i>
+                                        <span>Drag to organize</span>
+                                    </div>
+                                </div>
+                                <div class="card-approval-status" data-card-id="{{ card.id }}">
+                                    <div class="status-indicator" data-status="{{ card.approval_status or 'pending' }}" title="Click to change status">
+                                        <i class="fas fa-circle"></i>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                            {% if not unsorted_cards %}
+                            <div class="empty-state">
+                                <i class="fas fa-check-circle"></i>
+                                <h3>All cards are organized!</h3>
+                                <p>Great job! All your business cards have been sorted into labels.</p>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </section>
+
+                    <!-- Sorted Data Section -->
+                    <section class="sorted-section">
+                        <div class="section-header">
+                            <h2><i class="fas fa-tags"></i> Organized Cards</h2>
+                            <div class="section-stats">
+                                <span class="card-count" id="sortedCount">{{ sorted_cards|length }}</span>
+                            </div>
+                        </div>
+                        
+                        <!-- Labels container -->
+                        <div class="labels-container" id="labelsContainer">
+                            {% for label in labels %}
+                            {% set label_cards = sorted_cards|selectattr('label_id', 'equalto', label.id)|list %}
+                            <div class="label-group" data-label-id="{{ label.id }}">
+                                <div class="label-header" data-label-id="{{ label.id }}">
+                                    <div class="label-info">
+                                        <div class="label-color" style="background-color: {{ label.color }}"></div>
+                                        <h3>{{ label.name }}</h3>
+                                        <span class="label-count">({{ label_cards|length }})</span>
+                                    </div>
+                                    <div class="label-actions">
+                                        <button class="action-btn edit-label-btn" data-label-id="{{ label.id }}" title="Edit Label">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        <button class="action-btn toggle-label-btn" data-label-id="{{ label.id }}" title="Collapse/Expand">
+                                            <i class="fas fa-chevron-down"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="label-cards" data-label-id="{{ label.id }}">
+                                    {% for card in label_cards %}
+                                    <div class="card-item labeled-card" data-card-id="{{ card.id }}" data-card-data='{{ card|tojson }}'>
+                                        <div class="card-header">
+                                            <div class="card-identity">
+                                                <h4>{{ card.name or 'Unknown Name' }}</h4>
+                                                <div class="card-meta">
+                                                    <span class="country-flag">{{ card.flag or '🌍' }}</span>
+                                                    <span class="company">{{ card.company or 'No Company' }}</span>
+                                                </div>
+                                            </div>
+                                            <div class="card-actions">
+                                                <button class="action-btn edit-card-btn" title="Edit" data-card-id="{{ card.id }}">
+                                                    <i class="fas fa-edit"></i>
+                                                </button>
+                                                <button class="action-btn delete-card-btn" title="Delete" data-card-id="{{ card.id }}">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+                                        <div class="card-details">
+                                            {% if card.email %}
+                                            <p><i class="fas fa-envelope"></i> {{ card.email }}</p>
+                                            {% endif %}
+                                            {% if card.phone %}
+                                            <p><i class="fas fa-phone"></i> {{ card.phone }}</p>
+                                            {% endif %}
+                                            {% if card.website %}
+                                            <p><i class="fas fa-globe"></i> {{ card.website }}</p>
+                                            {% endif %}
+                                            {% if card.designation %}
+                                            <p><i class="fas fa-user-tie"></i> {{ card.designation }}</p>
+                                            {% endif %}
+                                        </div>
+                                        <div class="card-approval-status" data-card-id="{{ card.id }}">
+                                            <div class="status-indicator" data-status="{{ card.approval_status or 'pending' }}" title="Click to change status">
+                                                <i class="fas fa-circle"></i>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            {% endfor %}
+                            
+                            {% if not labels %}
+                            <div class="empty-state">
+                                <i class="fas fa-tags"></i>
+                                <h3>No labels created yet</h3>
+                                <p>Create your first label to start organizing your business cards.</p>
+                                <button class="btn-primary" id="createFirstLabel">
+                                    <i class="fas fa-plus"></i> Create Your First Label
+                                </button>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </section>
+                </div>
+                
+                <!-- Right side: Preview Panel -->
+                <div class="preview-panel" id="previewPanel">
+                    <div class="preview-header">
+                        <h3><i class="fas fa-eye"></i> Card Preview</h3>
+                        <button class="preview-close-btn" id="previewCloseBtn">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                    
+                    <div class="preview-content" id="previewContent">
+                        <div class="preview-placeholder">
+                            <i class="fas fa-mouse-pointer"></i>
+                            <h4>Select a card to preview</h4>
+                            <p>Click on any business card to view its details and image</p>
+                        </div>
+                    </div>
+                    
+                    <div class="preview-loaded" id="previewLoaded" style="display: none;">
+                        <!-- Card Image -->
+                        <div class="preview-image-section">
+                            <div class="image-container" style="cursor: pointer;" onclick="openImageModal()">
+                                <img id="previewImage" src="" alt="Business Card" />
+                            </div>
+                        </div>
+                        
+                        <!-- Card Information -->
+                        <div class="preview-card-info">
+                            <div class="card-info-header">
+                                <h4 id="previewCardName">Card Information</h4>
+                                <div class="preview-country">
+                                    <span id="previewCardFlag">🌍</span>
+                                </div>
+                                <div class="preview-actions">
+                                    <button class="action-btn edit-card-btn" id="previewEditBtn" title="Edit Card">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <div class="card-info-details">
+                                <div class="info-item" id="previewCompanyItem">
+                                    <i class="fas fa-building"></i>
+                                    <span id="previewCardCompany">Company</span>
+                                </div>
+                                
+                                <div class="info-item" id="previewEmailItem">
+                                    <i class="fas fa-envelope"></i>
+                                    <span id="previewCardEmail">Email</span>
+                                </div>
+                                
+                                <div class="info-item" id="previewPhoneItem">
+                                    <i class="fas fa-phone"></i>
+                                    <span id="previewCardPhone">Phone</span>
+                                </div>
+                                
+                                <div class="info-item" id="previewWebsiteItem">
+                                    <i class="fas fa-globe"></i>
+                                    <span id="previewCardWebsite">Website</span>
+                                </div>
+                                
+                                <div class="info-item" id="previewDesignationItem">
+                                    <i class="fas fa-user-tie"></i>
+                                    <span id="previewCardDesignation">Designation</span>
+                                </div>
+                                
+                                <!-- Event Information Section -->
+                                <div class="event-info-section" id="previewEventSection" style="display: none;">
+                                    <div class="section-divider"></div>
+                                    <h5><i class="fas fa-calendar-alt"></i> Event Information</h5>
+                                    
+                                    <div class="info-item" id="previewEventNameItem">
+                                        <i class="fas fa-calendar"></i>
+                                        <span id="previewEventName">Event Name</span>
+                                    </div>
+                                    
+                                    <div class="info-item" id="previewEventHostItem">
+                                        <i class="fas fa-user-friends"></i>
+                                        <span id="previewEventHost">Event Host</span>
+                                    </div>
+                                    
+                                    <div class="info-item" id="previewEventDateItem">
+                                        <i class="fas fa-calendar-day"></i>
+                                        <span id="previewEventDate">Event Date</span>
+                                    </div>
+                                    
+                                    <div class="info-item" id="previewEventLocationItem">
+                                        <i class="fas fa-map-marker-alt"></i>
+                                        <span id="previewEventLocation">Event Location</span>
+                                    </div>
+                                    
+                                    <div class="info-item" id="previewEventDescriptionItem">
+                                        <i class="fas fa-info-circle"></i>
+                                        <span id="previewEventDescription">Event Description</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Gallery View Section (Hidden by default) -->
+            <div class="gallery-view" id="galleryView" style="display: none;">
+                <div class="gallery-header">
+                    <h2><i class="fas fa-th-large"></i> Gallery View</h2>
+                    <div class="gallery-stats">
+                        <span class="total-cards-count" id="galleryTotalCount">{{ (unsorted_cards|length) + (sorted_cards|length) }}</span> cards
+                    </div>
+                </div>
+                
+                <div class="gallery-layout">
+                    <!-- Left: Cards Grid -->
+                    <div class="gallery-grid-container">
+                        <div class="gallery-grid" id="galleryGrid">
+                            {% for card in unsorted_cards + sorted_cards %}
+                            <div class="gallery-card-item" data-card-id="{{ card.id }}" data-card-data='{{ card|tojson }}'>
+                                <div class="gallery-card-image">
+                                    {% if card.image_base64 %}
+                                    <img src="{{ card.image_base64 }}" alt="{{ card.name or 'Business Card' }}" loading="lazy">
+                                    {% else %}
+                                    <div class="no-image-placeholder">
+                                        <i class="fas fa-image"></i>
+                                        <span>No Image</span>
+                                    </div>
+                                    {% endif %}
+                                </div>
+                                <div class="gallery-card-info">
+                                    <h4>{{ card.name or 'Unknown' }}</h4>
+                                    <p class="company">{{ card.company or 'No Company' }}</p>
+                                    <div class="card-meta">
+                                        <span class="country-flag">{{ card.flag or '🌍' }}</span>
+                                        {% if card.label_name %}
+                                        <span class="label-badge" style="background-color: {{ card.label_color or '#0891b2' }}">{{ card.label_name }}</span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                            
+                            {% if not (unsorted_cards or sorted_cards) %}
+                            <div class="gallery-empty-state">
+                                <i class="fas fa-images"></i>
+                                <h3>No cards to display</h3>
+                                <p>Upload some business cards to see them in gallery view.</p>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <!-- Right: Large Preview -->
+                    <div class="gallery-preview-panel">
+                        <div class="gallery-preview-header">
+                            <h3><i class="fas fa-eye"></i> Card Preview</h3>
+                        </div>
+                        
+                        <div class="gallery-preview-content" id="galleryPreviewContent">
+                            <div class="gallery-preview-placeholder">
+                                <i class="fas fa-mouse-pointer"></i>
+                                <h4>Select a card to preview</h4>
+                                <p>Click on any card thumbnail to view full details</p>
+                            </div>
+                        </div>
+                        
+                        <div class="gallery-preview-loaded" id="galleryPreviewLoaded" style="display: none;">
+                            <!-- Large Card Image -->
+                            <div class="gallery-preview-image-section">
+                                <div class="gallery-image-container">
+                                    <img id="galleryPreviewImage" src="" alt="Business Card" />
+                                </div>
+                            </div>
+                            
+                            <!-- Detailed Card Information -->
+                            <div class="gallery-preview-details">
+                                <div class="gallery-card-header">
+                                    <h3 id="galleryCardName">Card Name</h3>
+                                    <div class="gallery-card-actions">
+                                        <button class="action-btn edit-card-btn" id="galleryEditBtn" title="Edit Card">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                
+                                <div class="gallery-info-grid">
+                                    <div class="info-item">
+                                        <label>Company:</label>
+                                        <span id="galleryCardCompany">-</span>
+                                    </div>
+                                    <div class="info-item">
+                                        <label>Email:</label>
+                                        <span id="galleryCardEmail">-</span>
+                                    </div>
+                                    <div class="info-item">
+                                        <label>Phone:</label>
+                                        <span id="galleryCardPhone">-</span>
+                                    </div>
+                                    <div class="info-item">
+                                        <label>Website:</label>
+                                        <span id="galleryCardWebsite">-</span>
+                                    </div>
+                                    <div class="info-item">
+                                        <label>Designation:</label>
+                                        <span id="galleryCardDesignation">-</span>
+                                    </div>
+                                    <div class="info-item">
+                                        <label>Country:</label>
+                                        <span id="galleryCardCountry">-</span>
+                                    </div>
+                                </div>
+                                
+                                <!-- Event Information Section -->
+                                <div class="gallery-event-section" id="galleryEventSection" style="display: none;">
+                                    <h4><i class="fas fa-calendar-alt"></i> Event Information</h4>
+                                    <div class="gallery-info-grid">
+                                        <div class="info-item">
+                                            <label>Event:</label>
+                                            <span id="galleryEventName">-</span>
+                                        </div>
+                                        <div class="info-item">
+                                            <label>Host:</label>
+                                            <span id="galleryEventHost">-</span>
+                                        </div>
+                                        <div class="info-item">
+                                            <label>Date:</label>
+                                            <span id="galleryEventDate">-</span>
+                                        </div>
+                                        <div class="info-item">
+                                            <label>Location:</label>
+                                            <span id="galleryEventLocation">-</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Modal dialogs -->
+    <!-- Create Label Modal -->
+    <div class="modal-overlay" id="createLabelModal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="fas fa-tag"></i> Create New Label</h3>
+                <button class="modal-close" data-modal="createLabelModal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="createLabelForm">
+                    <div class="form-group">
+                        <label for="labelName">Label Name</label>
+                        <input type="text" id="labelName" placeholder="e.g., Tech Companies, Marketing, Clients" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="labelColor">Color</label>
+                        <div class="color-picker">
+                            <input type="color" id="labelColor" value="#0891b2">
+                            <div class="color-presets">
+                                <div class="color-preset" data-color="#0891b2" style="background: #0891b2;"></div>
+                                <div class="color-preset" data-color="#059669" style="background: #059669;"></div>
+                                <div class="color-preset" data-color="#dc2626" style="background: #dc2626;"></div>
+                                <div class="color-preset" data-color="#d97706" style="background: #d97706;"></div>
+                                <div class="color-preset" data-color="#7c3aed" style="background: #7c3aed;"></div>
+                                <div class="color-preset" data-color="#db2777" style="background: #db2777;"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-actions">
+                        <button type="button" class="cancel-btn" data-modal="createLabelModal">Cancel</button>
+                        <button type="submit" class="submit-btn">
+                            <i class="fas fa-plus"></i> Create Label
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Card Modal -->
+    <div class="modal-overlay" id="editCardModal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="fas fa-edit"></i> Edit Business Card</h3>
+                <button class="modal-close" data-modal="editCardModal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="editCardForm">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="editName">Name</label>
+                            <input type="text" id="editName" placeholder="Full name">
+                        </div>
+                        <div class="form-group">
+                            <label for="editDesignation">Designation</label>
+                            <input type="text" id="editDesignation" placeholder="Job title">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="editCompany">Company</label>
+                        <input type="text" id="editCompany" placeholder="Company name">
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="editEmail">Email</label>
+                            <input type="email" id="editEmail" placeholder="email@example.com">
+                        </div>
+                        <div class="form-group">
+                            <label for="editPhone">Phone</label>
+                            <input type="tel" id="editPhone" placeholder="Phone number">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="editWebsite">Website</label>
+                            <input type="url" id="editWebsite" placeholder="https://website.com">
+                        </div>
+                        <div class="form-group">
+                            <label for="editCountry">Country</label>
+                            <div class="country-select-wrapper">
+                                <input type="text" id="editCountry" placeholder="Type to search countries..." autocomplete="off">
+                                <div class="country-dropdown" id="countryDropdown" style="display: none;">
+                                    <!-- Country options will be populated by JavaScript -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Event Information Section -->
+                    <div class="event-section">
+                        <h3><i class="fas fa-calendar-alt"></i> Event Information</h3>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="editEventName">Event Name</label>
+                                <input type="text" id="editEventName" placeholder="e.g., Annual Conference 2025">
+                            </div>
+                            <div class="form-group">
+                                <label for="editEventHost">Event Host</label>
+                                <input type="text" id="editEventHost" placeholder="e.g., TechCorp Ltd.">
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="editEventDate">Event Date</label>
+                                <input type="date" id="editEventDate">
+                            </div>
+                            <div class="form-group">
+                                <label for="editEventLocation">Meeting Location</label>
+                                <input type="text" id="editEventLocation" placeholder="e.g., New York Convention Center">
+                            </div>
+                        </div>
+                        <div class="form-group full-width">
+                            <label for="editEventDescription">Event Description</label>
+                            <textarea id="editEventDescription" rows="4" placeholder="Brief description of the event or meeting purpose..."></textarea>
+                        </div>
+                    </div>
+
+                    <!-- Label Assignment Section -->
+                    <div class="label-section">
+                        <h3><i class="fas fa-tag"></i> Label Assignment</h3>
+                        <div class="form-group full-width">
+                            <label for="editLabelSelect">Assign to Label</label>
+                            <select id="editLabelSelect" class="form-select">
+                                <option value="">-- No Label --</option>
+                                <!-- Label options will be populated by JavaScript -->
+                            </select>
+                            <p class="form-help">Organize this card by assigning it to a label</p>
+                        </div>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="button" class="cancel-btn" data-modal="editCardModal">Cancel</button>
+                        <button type="submit" class="submit-btn">
+                            <i class="fas fa-save"></i> Save Changes
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading overlay -->
+    <div class="loading-overlay" id="loadingOverlay" style="display: none;">
+        <div class="loading-spinner">
+            <div class="spinner"></div>
+            <h3 id="loadingTitle">Processing...</h3>
+            <p id="loadingSubtitle">Please wait</p>
+        </div>
+    </div>
+
+    <!-- Image Modal for larger view -->
+    <div class="modal-overlay" id="imageModal" style="display: none;">
+        <div class="image-modal-content">
+            <div class="image-modal-header">
+                <span class="image-modal-filename" id="modalImageFilename"></span>
+                <button class="modal-close" onclick="closeImageModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="image-modal-body">
+                <img id="modalImage" src="" alt="Business Card Large View" />
+            </div>
+        </div>
+    </div>
+
+    <!-- Custom JavaScript for manage interface -->
+    <script src="{{ url_for('static', filename='js/manage.js') }}?v=20250629_v2"></script>
+</body>
+</html>
