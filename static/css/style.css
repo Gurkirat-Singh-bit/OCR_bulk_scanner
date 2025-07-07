@@ -111,6 +111,83 @@ body {
 .slide-down { animation: slideDown 0.4s ease-out; }
 .scale-in { animation: scaleIn 0.4s ease-out; }
 
+/* 51-70: Header navigation styles */
+.header-nav {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+    margin-top: 1.5rem;
+    flex-wrap: wrap;
+}
+
+.nav-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.5rem;
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--white);
+    text-decoration: none;
+    border-radius: 50px;
+    font-weight: 500;
+    transition: all var(--transition-normal);
+    backdrop-filter: blur(10px);
+    border: 2px solid transparent;
+}
+
+.nav-btn:hover {
+    background: rgba(255, 255, 255, 0.2);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+.nav-btn.active {
+    background: var(--accent-primary);
+    border-color: var(--accent-secondary);
+    color: var(--white);
+}
+
+.nav-btn i {
+    font-size: 0.9rem;
+}
+
+@media (max-width: 768px) {
+    .header-nav {
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    .nav-btn {
+        width: 200px;
+        justify-content: center;
+    }
+}
+
+/* 71-80: Animation keyframes */
+@keyframes fadeInDown {
+    from { opacity: 0; transform: translateY(-30px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes slideDown {
+    from { opacity: 0; transform: translateY(-20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes scaleIn {
+    from { opacity: 0; transform: scale(0.95); }
+    to { opacity: 1; transform: scale(1); }
+}
+
+.fade-in { animation: fadeIn 0.6s ease-out; }
+.slide-down { animation: slideDown 0.4s ease-out; }
+.scale-in { animation: scaleIn 0.4s ease-out; }
+
 /* 51-70: Messages styles */
 .messages-container {
     position: fixed;
@@ -2951,8 +3028,6 @@ body {
 }
 
 #editPreviewBtn:hover,
-
-
 
 #deletePreviewBtn:hover {
     pointer-events: auto !important;

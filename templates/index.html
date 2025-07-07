@@ -24,6 +24,17 @@
             <div class="header-content">
                 <h1><i class="fas fa-id-card-clip"></i> Business Card OCR API</h1>
                 <p class="subtitle">Extract structured data from business cards instantly with our RESTful API</p>
+                <nav class="header-nav">
+                    <a href="{{ url_for('main.index') }}" class="nav-btn active">
+                        <i class="fas fa-home"></i> Dashboard
+                    </a>
+                    <a href="{{ url_for('main.api_docs') }}" class="nav-btn">
+                        <i class="fas fa-code"></i> API Docs
+                    </a>
+                    <a href="{{ url_for('main.manage_data') }}" class="nav-btn">
+                        <i class="fas fa-cogs"></i> Manage Data
+                    </a>
+                </nav>
             </div>
         </header>
 

@@ -866,3 +866,10 @@ def get_countries():
     
     countries = get_all_country_flags()
     return jsonify({'success': True, 'countries': countries})
+
+@main_bp.route('/api_docs')
+def api_docs():
+    """
+    API Documentation page - shows all available endpoints and their usage
+    """
+    return render_template('api_docs.html')

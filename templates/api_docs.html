@@ -1,0 +1,682 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Documentation | Business Card OCR API</title>
+    <link rel="icon" type="image/png" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAACXBIWXMAAAsTAAALEwEAmpwYAAABpUlEQVR4nO2WTytEYRTGf8NChEKzUBZkY2FhNVZTfgMln0A+gfIJlE9gvoHyCSxsLNhYKAsWUhIWKH82KM/cdTvce+feuZP5A/PU7XbPec/znHPPey78V1ADGOAPwBeQAV4ZUEANMAHsgIuIeAM2gVFgNisRdcAssA+8O5LFxSOwAQwD9VmIqAVGpPDTFJL/iwdgFegDatIU0SH3S1nqeokdmVNXtIAq4P4HFl8DDil2AscU52TeBVAZR0ATcFzkxDf8ngF6hcduehaYj3LmgbZfWnwbmAXOgTRs+uk30iL5xaJdRbF+Dlwy4EtFvZYcxJ9L7gKD5e4OCvUZsCDcJXXTbcuS+8C0HOsRkjEvXq0J/MqQHwKN0me2RcGRjOsT7lPbcxSyRhIUZDLvJ...">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v=20250708">
+    <style>
+        .api-docs-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .api-header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+            padding: 40px 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+        }
+        
+        .api-header h1 {
+            font-size: 3rem;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+        
+        .api-header p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+        
+        .api-section {
+            background: white;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+        
+        .api-section-header {
+            background: linear-gradient(135deg, #2c3e50, #3498db);
+            color: white;
+            padding: 20px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.3s ease;
+        }
+        
+        .api-section-header:hover {
+            background: linear-gradient(135deg, #34495e, #2980b9);
+        }
+        
+        .api-section-header h2 {
+            margin: 0;
+            font-size: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .method-badge {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            color: white;
+        }
+        
+        .method-post { background: #28a745; }
+        .method-get { background: #007bff; }
+        .method-put { background: #ffc107; color: #000; }
+        .method-delete { background: #dc3545; }
+        
+        .api-section-content {
+            padding: 20px;
+            display: none;
+        }
+        
+        .api-section.active .api-section-content {
+            display: block;
+        }
+        
+        .api-section.active .toggle-icon {
+            transform: rotate(180deg);
+        }
+        
+        .toggle-icon {
+            transition: transform 0.3s ease;
+        }
+        
+        .endpoint-description {
+            margin-bottom: 20px;
+            color: #666;
+            line-height: 1.6;
+        }
+        
+        .example-request, .example-response {
+            background: #f8f9fa;
+            border-left: 4px solid #007bff;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 5px;
+        }
+        
+        .example-request h4, .example-response h4 {
+            margin-top: 0;
+            color: #007bff;
+        }
+        
+        .code-block {
+            background: #2d3748;
+            color: #e2e8f0;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            overflow-x: auto;
+            white-space: pre-wrap;
+        }
+        
+        .parameter {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 5px;
+            padding: 10px;
+            margin: 10px 0;
+        }
+        
+        .parameter-name {
+            font-weight: bold;
+            color: #007bff;
+        }
+        
+        .parameter-type {
+            color: #28a745;
+            font-style: italic;
+        }
+        
+        .required {
+            color: #dc3545;
+            font-weight: bold;
+        }
+        
+        .back-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 24px;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            text-decoration: none;
+            border-radius: 50px;
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+            margin-bottom: 20px;
+        }
+        
+        .back-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+        
+        .auth-info {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            color: #856404;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        
+        .auth-info h4 {
+            margin-top: 0;
+            color: #856404;
+        }
+        
+        .try-button {
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            margin-top: 10px;
+        }
+        
+        .try-button:hover {
+            background: #218838;
+            transform: translateY(-1px);
+        }
+    </style>
+</head>
+<body>
+    <div class="api-docs-container">
+        <!-- Header -->
+        <div class="api-header">
+            <a href="{{ url_for('main.index') }}" class="back-btn">
+                <i class="fas fa-arrow-left"></i>
+                Back to Dashboard
+            </a>
+            <h1><i class="fas fa-code"></i> API Documentation</h1>
+            <p>Complete guide to the Business Card OCR API endpoints</p>
+        </div>
+
+        <!-- Authentication Section -->
+        <div class="api-section active">
+            <div class="api-section-header" onclick="toggleSection(this)">
+                <h2><i class="fas fa-key"></i> Authentication</h2>
+                <i class="fas fa-chevron-down toggle-icon"></i>
+            </div>
+            <div class="api-section-content">
+                <div class="auth-info">
+                    <h4><i class="fas fa-info-circle"></i> API Key Required</h4>
+                    <p>Most endpoints require authentication using an API token. Include your token in the Authorization header:</p>
+                    <div class="code-block">Authorization: Bearer YOUR_API_TOKEN</div>
+                </div>
+                
+                <div class="endpoint-description">
+                    <h3>Get API Token</h3>
+                    <p>First, register for an account and then request an API token.</p>
+                </div>
+                
+                <div class="example-request">
+                    <h4>Register Account</h4>
+                    <div class="code-block">POST /api/auth/register
+Content-Type: application/json
+
+{
+    "username": "your_username",
+    "email": "your_email@example.com",
+    "password": "your_secure_password"
+}</div>
+                </div>
+                
+                <div class="example-request">
+                    <h4>Get Token</h4>
+                    <div class="code-block">POST /api/auth/token
+Content-Type: application/json
+
+{
+    "username": "your_username",
+    "password": "your_password"
+}</div>
+                </div>
+                
+                <div class="example-response">
+                    <h4>Response</h4>
+                    <div class="code-block">{
+    "token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...",
+    "expires_in": 3600
+}</div>
+                </div>
+                
+                <button class="try-button" onclick="generateApiKey()">
+                    <i class="fas fa-key"></i> Get API Key
+                </button>
+            </div>
+        </div>
+
+        <!-- OCR Processing Section -->
+        <div class="api-section">
+            <div class="api-section-header" onclick="toggleSection(this)">
+                <h2>
+                    <span class="method-badge method-post">POST</span>
+                    /api/ocr
+                </h2>
+                <i class="fas fa-chevron-down toggle-icon"></i>
+            </div>
+            <div class="api-section-content">
+                <div class="endpoint-description">
+                    <h3>Extract text from business card images</h3>
+                    <p>Upload one or more business card images to extract structured contact information using advanced OCR technology.</p>
+                </div>
+                
+                <div class="parameter">
+                    <span class="parameter-name">files</span> 
+                    <span class="parameter-type">(file, required)</span> - 
+                    Business card image files (JPG, PNG, GIF, WEBP)
+                </div>
+                
+                <div class="parameter">
+                    <span class="parameter-name">event_name</span> 
+                    <span class="parameter-type">(string, optional)</span> - 
+                    Name of the event where cards were collected
+                </div>
+                
+                <div class="example-request">
+                    <h4>cURL Example</h4>
+                    <div class="code-block">curl -X POST "http://your-domain.com/api/ocr" \
+  -H "Authorization: Bearer YOUR_API_TOKEN" \
+  -F "files=@business_card1.jpg" \
+  -F "files=@business_card2.png" \
+  -F "event_name=Tech Conference 2025"</div>
+                </div>
+                
+                <div class="example-response">
+                    <h4>Response</h4>
+                    <div class="code-block">{
+    "success": true,
+    "message": "Successfully processed 2 files",
+    "session_id": "abc123def456",
+    "results": [
+        {
+            "filename": "business_card1.jpg",
+            "extracted_data": {
+                "name": "John Doe",
+                "title": "Software Engineer",
+                "company": "Tech Corp",
+                "email": "john.doe@techcorp.com",
+                "phone": "+1-555-0123",
+                "website": "www.techcorp.com"
+            }
+        }
+    ]
+}</div>
+                </div>
+                
+                <button class="try-button" onclick="testOcrEndpoint()">
+                    <i class="fas fa-play"></i> Try This Endpoint
+                </button>
+            </div>
+        </div>
+
+        <!-- Get Cards Section -->
+        <div class="api-section">
+            <div class="api-section-header" onclick="toggleSection(this)">
+                <h2>
+                    <span class="method-badge method-get">GET</span>
+                    /api/cards
+                </h2>
+                <i class="fas fa-chevron-down toggle-icon"></i>
+            </div>
+            <div class="api-section-content">
+                <div class="endpoint-description">
+                    <h3>Get all extracted card data</h3>
+                    <p>Retrieve all business cards that have been processed and stored in the system.</p>
+                </div>
+                
+                <div class="parameter">
+                    <span class="parameter-name">limit</span> 
+                    <span class="parameter-type">(integer, optional)</span> - 
+                    Maximum number of cards to return (default: 50)
+                </div>
+                
+                <div class="parameter">
+                    <span class="parameter-name">offset</span> 
+                    <span class="parameter-type">(integer, optional)</span> - 
+                    Number of cards to skip for pagination (default: 0)
+                </div>
+                
+                <div class="example-request">
+                    <h4>cURL Example</h4>
+                    <div class="code-block">curl -X GET "http://your-domain.com/api/cards?limit=10&offset=0" \
+  -H "Authorization: Bearer YOUR_API_TOKEN"</div>
+                </div>
+                
+                <div class="example-response">
+                    <h4>Response</h4>
+                    <div class="code-block">{
+    "success": true,
+    "cards": [
+        {
+            "id": 1,
+            "name": "John Doe",
+            "title": "Software Engineer",
+            "company": "Tech Corp",
+            "email": "john.doe@techcorp.com",
+            "phone": "+1-555-0123",
+            "website": "www.techcorp.com",
+            "created_at": "2025-07-08T10:30:00Z",
+            "labels": ["networking", "tech"]
+        }
+    ],
+    "total": 100,
+    "page": 1,
+    "pages": 10
+}</div>
+                </div>
+                
+                <button class="try-button" onclick="testCardsEndpoint()">
+                    <i class="fas fa-play"></i> Try This Endpoint
+                </button>
+            </div>
+        </div>
+
+        <!-- Get Single Card Section -->
+        <div class="api-section">
+            <div class="api-section-header" onclick="toggleSection(this)">
+                <h2>
+                    <span class="method-badge method-get">GET</span>
+                    /api/cards/{id}
+                </h2>
+                <i class="fas fa-chevron-down toggle-icon"></i>
+            </div>
+            <div class="api-section-content">
+                <div class="endpoint-description">
+                    <h3>Get specific card data</h3>
+                    <p>Retrieve detailed information for a specific business card by its ID.</p>
+                </div>
+                
+                <div class="parameter">
+                    <span class="parameter-name">id</span> 
+                    <span class="parameter-type">(integer, required)</span> - 
+                    The unique ID of the business card
+                </div>
+                
+                <div class="example-request">
+                    <h4>cURL Example</h4>
+                    <div class="code-block">curl -X GET "http://your-domain.com/api/cards/123" \
+  -H "Authorization: Bearer YOUR_API_TOKEN"</div>
+                </div>
+                
+                <div class="example-response">
+                    <h4>Response</h4>
+                    <div class="code-block">{
+    "success": true,
+    "card": {
+        "id": 123,
+        "name": "Jane Smith",
+        "title": "Product Manager",
+        "company": "Innovation Labs",
+        "email": "jane.smith@innovationlabs.com",
+        "phone": "+1-555-0456",
+        "website": "www.innovationlabs.com",
+        "created_at": "2025-07-08T14:20:00Z",
+        "labels": ["product", "management"],
+        "image_url": "/static/uploads/card_123.jpg"
+    }
+}</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Update Card Section -->
+        <div class="api-section">
+            <div class="api-section-header" onclick="toggleSection(this)">
+                <h2>
+                    <span class="method-badge method-put">PUT</span>
+                    /api/cards/{id}
+                </h2>
+                <i class="fas fa-chevron-down toggle-icon"></i>
+            </div>
+            <div class="api-section-content">
+                <div class="endpoint-description">
+                    <h3>Update card information</h3>
+                    <p>Update the extracted information for a specific business card.</p>
+                </div>
+                
+                <div class="parameter">
+                    <span class="parameter-name">id</span> 
+                    <span class="parameter-type">(integer, required)</span> - 
+                    The unique ID of the business card
+                </div>
+                
+                <div class="example-request">
+                    <h4>cURL Example</h4>
+                    <div class="code-block">curl -X PUT "http://your-domain.com/api/cards/123" \
+  -H "Authorization: Bearer YOUR_API_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Jane Smith",
+    "title": "Senior Product Manager",
+    "company": "Innovation Labs Inc.",
+    "email": "jane.smith@innovationlabs.com",
+    "phone": "+1-555-0456"
+  }'</div>
+                </div>
+                
+                <div class="example-response">
+                    <h4>Response</h4>
+                    <div class="code-block">{
+    "success": true,
+    "message": "Card updated successfully",
+    "card": {
+        "id": 123,
+        "name": "Jane Smith",
+        "title": "Senior Product Manager",
+        "company": "Innovation Labs Inc.",
+        "email": "jane.smith@innovationlabs.com",
+        "phone": "+1-555-0456"
+    }
+}</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Delete Card Section -->
+        <div class="api-section">
+            <div class="api-section-header" onclick="toggleSection(this)">
+                <h2>
+                    <span class="method-badge method-delete">DELETE</span>
+                    /api/cards/{id}
+                </h2>
+                <i class="fas fa-chevron-down toggle-icon"></i>
+            </div>
+            <div class="api-section-content">
+                <div class="endpoint-description">
+                    <h3>Delete a business card</h3>
+                    <p>Permanently remove a business card from the system.</p>
+                </div>
+                
+                <div class="parameter">
+                    <span class="parameter-name">id</span> 
+                    <span class="parameter-type">(integer, required)</span> - 
+                    The unique ID of the business card to delete
+                </div>
+                
+                <div class="example-request">
+                    <h4>cURL Example</h4>
+                    <div class="code-block">curl -X DELETE "http://your-domain.com/api/cards/123" \
+  -H "Authorization: Bearer YOUR_API_TOKEN"</div>
+                </div>
+                
+                <div class="example-response">
+                    <h4>Response</h4>
+                    <div class="code-block">{
+    "success": true,
+    "message": "Card deleted successfully"
+}</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Search Cards Section -->
+        <div class="api-section">
+            <div class="api-section-header" onclick="toggleSection(this)">
+                <h2>
+                    <span class="method-badge method-get">GET</span>
+                    /api/cards/search
+                </h2>
+                <i class="fas fa-chevron-down toggle-icon"></i>
+            </div>
+            <div class="api-section-content">
+                <div class="endpoint-description">
+                    <h3>Search business cards</h3>
+                    <p>Search through business cards using various criteria like name, company, or email.</p>
+                </div>
+                
+                <div class="parameter">
+                    <span class="parameter-name">q</span> 
+                    <span class="parameter-type">(string, optional)</span> - 
+                    Search query to match against name, company, or email
+                </div>
+                
+                <div class="parameter">
+                    <span class="parameter-name">company</span> 
+                    <span class="parameter-type">(string, optional)</span> - 
+                    Filter by specific company name
+                </div>
+                
+                <div class="example-request">
+                    <h4>cURL Example</h4>
+                    <div class="code-block">curl -X GET "http://your-domain.com/api/cards/search?q=john&company=Tech" \
+  -H "Authorization: Bearer YOUR_API_TOKEN"</div>
+                </div>
+                
+                <div class="example-response">
+                    <h4>Response</h4>
+                    <div class="code-block">{
+    "success": true,
+    "results": [
+        {
+            "id": 1,
+            "name": "John Doe",
+            "title": "Software Engineer",
+            "company": "Tech Corp",
+            "email": "john.doe@techcorp.com",
+            "phone": "+1-555-0123"
+        }
+    ],
+    "total": 1
+}</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Progress Tracking Section -->
+        <div class="api-section">
+            <div class="api-section-header" onclick="toggleSection(this)">
+                <h2>
+                    <span class="method-badge method-get">GET</span>
+                    /api/progress/{session_id}
+                </h2>
+                <i class="fas fa-chevron-down toggle-icon"></i>
+            </div>
+            <div class="api-section-content">
+                <div class="endpoint-description">
+                    <h3>Track processing progress</h3>
+                    <p>Monitor the progress of bulk OCR processing operations using the session ID returned from the upload endpoint.</p>
+                </div>
+                
+                <div class="parameter">
+                    <span class="parameter-name">session_id</span> 
+                    <span class="parameter-type">(string, required)</span> - 
+                    The session ID returned from the OCR upload endpoint
+                </div>
+                
+                <div class="example-request">
+                    <h4>cURL Example</h4>
+                    <div class="code-block">curl -X GET "http://your-domain.com/api/progress/abc123def456" \
+  -H "Authorization: Bearer YOUR_API_TOKEN"</div>
+                </div>
+                
+                <div class="example-response">
+                    <h4>Response</h4>
+                    <div class="code-block">{
+    "session_id": "abc123def456",
+    "status": "processing",
+    "progress": 75,
+    "total_files": 10,
+    "processed_files": 7,
+    "message": "Processing file 8 of 10..."
+}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function toggleSection(header) {
+            const section = header.parentElement;
+            section.classList.toggle('active');
+        }
+
+        function generateApiKey() {
+            // Mock API key generation
+            const mockToken = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2lkIjoxMjMsImV4cCI6MTY0MzY0NDgwMH0.abc123def456ghi789';
+            
+            // Show modal or redirect to registration
+            if (confirm('This will redirect you to the registration page. Continue?')) {
+                // You can implement actual registration logic here
+                alert('API Key: ' + mockToken + '\n\nSave this token securely!');
+            }
+        }
+
+        function testOcrEndpoint() {
+            const fileInput = document.createElement('input');
+            fileInput.type = 'file';
+            fileInput.multiple = true;
+            fileInput.accept = 'image/*';
+            
+            fileInput.onchange = function(e) {
+                if (e.target.files.length > 0) {
+                    alert('This is a demo. In a real implementation, the files would be uploaded to /api/ocr');
+                }
+            };
+            
+            fileInput.click();
+        }
+
+        function testCardsEndpoint() {
+            // Mock API call
+            alert('Demo: GET /api/cards\nThis would return all business cards in JSON format.');
+        }
+
+        // Auto-expand the first section
+        document.addEventListener('DOMContentLoaded', function() {
+            const firstSection = document.querySelector('.api-section');
+            if (firstSection) {
+                firstSection.classList.add('active');
+            }
+        });
+    </script>
+</body>
+</html>
