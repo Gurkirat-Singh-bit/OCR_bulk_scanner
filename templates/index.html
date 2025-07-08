@@ -260,7 +260,7 @@
                             </div>
                         </div>
                         <div class="api-actions">
-                            <button class="api-btn" id="getApiKeyBtn" onclick="openApiKeyModal()">
+                            <button class="api-btn" id="getApiKeyBtn" onclick="document.getElementById('apiKeyModalOverlay').classList.add('active'); document.body.style.overflow='hidden';">
                                 <i class="fas fa-key"></i> Get API Key
                             </button>
                             <button class="api-btn secondary" id="viewDocsBtn" onclick="window.location.href='/api_docs'">

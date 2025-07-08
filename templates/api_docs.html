@@ -14,86 +14,174 @@
     <!-- Custom CSS -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v=20250708">
     <style>
+        /* World Space Council Theme - Matching main dashboard */
+        :root {
+            /* World Space Council navy and orange color scheme */
+            --primary-bg: #f8fafc;
+            --secondary-bg: #f1f5f9; 
+            --tertiary-bg: #e5eaf0;
+            --accent-primary: #f89827; /* World Space Council orange */
+            --accent-secondary: #e88112; /* Darker orange for hover states */
+            --accent-light: #ffc078; /* Lighter orange */
+            --text-dark: #14293d; /* World Space Council navy */
+            --text-medium: #2c4559;
+            --text-light: #4a6278;
+            --border-light: #cbd5e1;
+            --white: #ffffff;
+            --success-light: #059669;
+            --error-light: #dc2626;
+            --warning-light: #d97706;
+            
+            /* Shadows */
+            --shadow-soft: 0 2px 10px rgba(0, 0, 0, 0.06);
+            --shadow-medium: 0 4px 20px rgba(0, 0, 0, 0.08);
+            --shadow-hover: 0 8px 30px rgba(0, 0, 0, 0.12);
+            
+            /* Transitions */
+            --transition-fast: 0.2s ease-in-out;
+            --transition-normal: 0.3s ease-in-out;
+            --transition-slow: 0.5s ease-in-out;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, var(--primary-bg) 0%, var(--secondary-bg) 50%, var(--tertiary-bg) 100%);
+            color: var(--text-dark);
+            line-height: 1.6;
+            overflow-x: hidden;
+            min-height: 100vh;
+            margin: 0;
+            padding: 0;
+        }
+
         .api-docs-container {
             max-width: 1200px;
             margin: 0 auto;
-            padding: 20px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 2rem;
             min-height: 100vh;
         }
         
         .api-header {
             text-align: center;
-            color: white;
-            margin-bottom: 30px;
-            padding: 40px 20px;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 20px;
-            backdrop-filter: blur(10px);
+            margin-bottom: 3rem;
+            animation: fadeInDown 0.8s ease-out;
+            background: var(--text-dark); /* World Space Council navy blue */
+            border-radius: 16px;
+            padding: 2rem;
+            box-shadow: var(--shadow-medium);
         }
         
         .api-header h1 {
             font-size: 3rem;
-            margin-bottom: 10px;
-            font-weight: 700;
+            font-weight: 600;
+            color: var(--white); /* White text for better contrast on navy */
+            margin-bottom: 0.5rem;
+            position: relative;
+        }
+
+        .api-header h1 i {
+            color: var(--accent-primary); /* World Space Council orange */
+            margin-right: 0.5rem;
         }
         
         .api-header p {
-            font-size: 1.2rem;
-            opacity: 0.9;
+            font-size: 1.1rem;
+            color: var(--white);
+            opacity: 0.85;
+            font-weight: 400;
+            margin-bottom: 0;
         }
         
         .api-section {
-            background: white;
-            border-radius: 15px;
-            margin-bottom: 20px;
+            background: var(--white);
+            border-radius: 16px;
+            margin-bottom: 1.5rem;
             overflow: hidden;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            box-shadow: var(--shadow-soft);
+            border: 1px solid var(--border-light);
+            transition: var(--transition-normal);
+            animation: fadeIn 0.6s ease-out;
+        }
+
+        .api-section:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-hover);
         }
         
         .api-section-header {
-            background: linear-gradient(135deg, #2c3e50, #3498db);
-            color: white;
-            padding: 20px;
+            background: linear-gradient(135deg, var(--text-dark), var(--text-medium));
+            color: var(--white);
+            padding: 1.5rem;
             cursor: pointer;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            transition: all 0.3s ease;
+            transition: var(--transition-normal);
         }
         
         .api-section-header:hover {
-            background: linear-gradient(135deg, #34495e, #2980b9);
+            background: linear-gradient(135deg, var(--text-medium), var(--text-light));
         }
         
         .api-section-header h2 {
             margin: 0;
-            font-size: 1.5rem;
+            font-size: 1.4rem;
             display: flex;
             align-items: center;
             gap: 10px;
+            font-weight: 600;
         }
         
         .method-badge {
-            padding: 4px 8px;
-            border-radius: 4px;
-            font-size: 0.8rem;
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-size: 0.75rem;
             font-weight: bold;
-            color: white;
+            color: var(--white);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
         
-        .method-post { background: #28a745; }
-        .method-get { background: #007bff; }
-        .method-put { background: #ffc107; color: #000; }
-        .method-delete { background: #dc3545; }
+        .method-post { background: var(--success-light); }
+        .method-get { background: var(--accent-primary); }
+        .method-put { background: var(--warning-light); }
+        .method-delete { background: var(--error-light); }
         
         .api-section-content {
-            padding: 20px;
+            padding: 2rem;
             display: none;
         }
         
         .api-section.active .api-section-content {
             display: block;
+            animation: fadeInUp 0.4s ease-out;
+        }
+
+        @keyframes fadeInDown {
+            from { opacity: 0; transform: translateY(-30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
         
         .api-section.active .toggle-icon {
@@ -101,58 +189,120 @@
         }
         
         .toggle-icon {
-            transition: transform 0.3s ease;
+            transition: var(--transition-normal);
         }
         
         .endpoint-description {
-            margin-bottom: 20px;
-            color: #666;
-            line-height: 1.6;
+            margin-bottom: 1.5rem;
+            color: var(--text-medium);
+            line-height: 1.7;
+        }
+
+        .endpoint-description h3 {
+            color: var(--text-dark);
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+        }
+
+        .language-tabs {
+            display: flex;
+            gap: 10px;
+            margin: 1.5rem 0;
+            flex-wrap: wrap;
+        }
+        
+        .lang-tab {
+            background: var(--secondary-bg);
+            color: var(--text-dark);
+            border: 2px solid transparent;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: var(--transition-normal);
+            font-size: 0.9rem;
+        }
+        
+        .lang-tab.active {
+            background: var(--accent-primary);
+            color: var(--white);
+            border-color: var(--accent-secondary);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-soft);
+        }
+
+        .lang-tab:hover:not(.active) {
+            background: var(--tertiary-bg);
+            transform: translateY(-1px);
+        }
+        
+        .lang-content {
+            display: none;
+        }
+        
+        .lang-content.active {
+            display: block;
+            animation: fadeIn 0.3s ease;
         }
         
         .example-request, .example-response {
-            background: #f8f9fa;
-            border-left: 4px solid #007bff;
-            padding: 15px;
-            margin: 15px 0;
-            border-radius: 5px;
+            background: var(--secondary-bg);
+            border-left: 4px solid var(--accent-primary);
+            padding: 1.5rem;
+            margin: 1rem 0;
+            border-radius: 8px;
+            box-shadow: var(--shadow-soft);
         }
         
         .example-request h4, .example-response h4 {
             margin-top: 0;
-            color: #007bff;
+            margin-bottom: 1rem;
+            color: var(--text-dark);
+            font-weight: 600;
         }
         
         .code-block {
-            background: #2d3748;
+            background: var(--text-dark);
             color: #e2e8f0;
-            padding: 15px;
+            padding: 1.5rem;
             border-radius: 8px;
-            font-family: 'Courier New', monospace;
+            font-family: 'Courier New', 'Monaco', monospace;
             overflow-x: auto;
             white-space: pre-wrap;
+            font-size: 13px;
+            line-height: 1.5;
+            border: 1px solid var(--border-light);
         }
         
         .parameter {
-            background: #f8f9fa;
-            border: 1px solid #dee2e6;
-            border-radius: 5px;
-            padding: 10px;
-            margin: 10px 0;
+            background: var(--white);
+            border: 1px solid var(--border-light);
+            border-radius: 8px;
+            padding: 1rem;
+            margin: 0.75rem 0;
+            transition: var(--transition-normal);
+            box-shadow: var(--shadow-soft);
+        }
+
+        .parameter:hover {
+            transform: translateX(3px);
+            box-shadow: var(--shadow-medium);
         }
         
         .parameter-name {
             font-weight: bold;
-            color: #007bff;
+            color: var(--accent-primary);
+            font-size: 1rem;
         }
         
         .parameter-type {
-            color: #28a745;
+            color: var(--success-light);
             font-style: italic;
+            font-weight: 500;
         }
         
         .required {
-            color: #dc3545;
+            color: var(--error-light);
             font-weight: bold;
         }
         
@@ -161,49 +311,65 @@
             align-items: center;
             gap: 10px;
             padding: 12px 24px;
-            background: rgba(255, 255, 255, 0.2);
-            color: white;
+            background: var(--accent-primary);
+            color: var(--white);
             text-decoration: none;
-            border-radius: 50px;
-            backdrop-filter: blur(10px);
-            transition: all 0.3s ease;
+            border-radius: 8px;
+            transition: var(--transition-normal);
             margin-bottom: 20px;
+            box-shadow: var(--shadow-soft);
+            font-weight: 600;
         }
         
         .back-btn:hover {
-            background: rgba(255, 255, 255, 0.3);
+            background: var(--accent-secondary);
             transform: translateY(-2px);
+            color: var(--white);
+            text-decoration: none;
+            box-shadow: var(--shadow-medium);
         }
         
         .auth-info {
-            background: #fff3cd;
-            border: 1px solid #ffeaa7;
-            color: #856404;
-            padding: 15px;
+            background: linear-gradient(135deg, #fef3c7, #fcd34d);
+            border: 1px solid #f59e0b;
+            color: #92400e;
+            padding: 1.5rem;
             border-radius: 8px;
-            margin: 20px 0;
+            margin: 1.5rem 0;
+            box-shadow: var(--shadow-soft);
         }
         
         .auth-info h4 {
             margin-top: 0;
-            color: #856404;
+            margin-bottom: 0.5rem;
+            color: #92400e;
+            font-weight: 600;
         }
         
         .try-button {
-            background: #28a745;
-            color: white;
+            background: var(--success-light);
+            color: var(--white);
             border: none;
-            padding: 10px 20px;
-            border-radius: 5px;
+            padding: 12px 24px;
+            border-radius: 8px;
             cursor: pointer;
-            font-weight: bold;
-            transition: all 0.3s ease;
-            margin-top: 10px;
+            font-weight: 600;
+            transition: var(--transition-normal);
+            margin-top: 1rem;
+            box-shadow: var(--shadow-soft);
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
         }
         
         .try-button:hover {
-            background: #218838;
-            transform: translateY(-1px);
+            background: #047857;
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-medium);
+        }
+
+        .try-button:active {
+            transform: translateY(0);
         }
     </style>
 </head>
@@ -302,12 +468,169 @@ Content-Type: application/json
                 </div>
                 
                 <div class="example-request">
-                    <h4>cURL Example</h4>
-                    <div class="code-block">curl -X POST "http://your-domain.com/api/ocr" \
-  -H "Authorization: Bearer YOUR_API_TOKEN" \
-  -F "files=@business_card1.jpg" \
-  -F "files=@business_card2.png" \
-  -F "event_name=Tech Conference 2025"</div>
+                    <h4>Code Examples</h4>
+                    <div class="language-tabs">
+                        <button class="lang-tab active" data-lang="python">Python</button>
+                        <button class="lang-tab" data-lang="javascript">JavaScript</button>
+                        <button class="lang-tab" data-lang="php">PHP</button>
+                    </div>
+                    
+                    <div class="lang-content active" id="python">
+                        <div class="code-block">import requests
+
+# Setup
+url = "http://your-domain.com/api/ocr"
+token = "YOUR_API_TOKEN"
+headers = {"Authorization": f"Bearer {token}"}
+
+# Upload files
+files = [
+    ('files', ('card1.jpg', open('card1.jpg', 'rb'), 'image/jpeg')),
+    ('files', ('card2.png', open('card2.png', 'rb'), 'image/png'))
+]
+data = {"event_name": "Tech Conference 2025"}
+
+# Make request
+response = requests.post(url, headers=headers, files=files, data=data)
+result = response.json()
+
+print(f"Success: {result['success']}")
+print(f"Session ID: {result['session_id']}")
+for card in result['results']:
+    print(f"Name: {card['extracted_data']['name']}")
+    print(f"Company: {card['extracted_data']['company']}")
+
+# Close files
+for file_tuple in files:
+    file_tuple[1][1].close()</div>
+                    </div>
+                    
+                    <div class="lang-content" id="javascript">
+                        <div class="code-block">// Using fetch API with FormData
+const uploadCards = async () => {
+    const formData = new FormData();
+    
+    // Add files from file input
+    const fileInput = document.getElementById('fileInput');
+    for (let file of fileInput.files) {
+        formData.append('files', file);
+    }
+    formData.append('event_name', 'Tech Conference 2025');
+    
+    try {
+        const response = await fetch('http://your-domain.com/api/ocr', {
+            method: 'POST',
+            headers: {
+                'Authorization': 'Bearer YOUR_API_TOKEN'
+            },
+            body: formData
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            console.log('Upload successful!');
+            console.log('Session ID:', result.session_id);
+            result.results.forEach(card => {
+                console.log('Name:', card.extracted_data.name);
+                console.log('Company:', card.extracted_data.company);
+            });
+        }
+    } catch (error) {
+        console.error('Error:', error);
+    }
+};
+
+// Usage
+uploadCards();</div>
+                    </div>
+                    
+                    <div class="lang-content" id="php">
+                        <div class="code-block"><?php
+
+class OCRClient {
+    private $apiUrl;
+    private $token;
+    
+    public function __construct($apiUrl, $token) {
+        $this->apiUrl = $apiUrl;
+        $this->token = $token;
+    }
+    
+    public function uploadCards($filePaths, $eventName = null) {
+        $url = $this->apiUrl . '/api/ocr';
+        
+        // Prepare POST fields
+        $postFields = [];
+        
+        foreach ($filePaths as $filePath) {
+            if (file_exists($filePath)) {
+                $postFields['files[]'] = new CURLFile($filePath);
+            }
+        }
+        
+        if ($eventName) {
+            $postFields['event_name'] = $eventName;
+        }
+        
+        // Initialize cURL
+        $ch = curl_init();
+        
+        curl_setopt($ch, CURLOPT_URL, $url);
+        curl_setopt($ch, CURLOPT_POST, true);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, $postFields);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, [
+            'Authorization: Bearer ' . $this->token
+        ]);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+        
+        // Execute request
+        $response = curl_exec($ch);
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        
+        curl_close($ch);
+        
+        if ($httpCode === 200) {
+            $result = json_decode($response, true);
+            
+            if ($result['success']) {
+                echo "Upload successful!\n";
+                echo "Session ID: " . $result['session_id'] . "\n";
+                
+                foreach ($result['results'] as $card) {
+                    $data = $card['extracted_data'];
+                    echo "Name: " . $data['name'] . "\n";
+                    echo "Company: " . $data['company'] . "\n";
+                    echo "Email: " . $data['email'] . "\n";
+                    echo "---\n";
+                }
+                return $result;
+            }
+        }
+        
+        return false;
+    }
+}
+
+// Usage
+$client = new OCRClient('http://your-domain.com', 'YOUR_API_TOKEN');
+
+$filePaths = [
+    'business_card1.jpg',
+    'business_card2.png'
+];
+
+$result = $client->uploadCards($filePaths, 'Tech Conference 2025');
+
+if ($result) {
+    echo "Processing complete!\n";
+} else {
+    echo "Upload failed!\n";
+}
+
+?></div>
+                    </div>
                 </div>
                 
                 <div class="example-response">
@@ -366,9 +689,134 @@ Content-Type: application/json
                 </div>
                 
                 <div class="example-request">
-                    <h4>cURL Example</h4>
-                    <div class="code-block">curl -X GET "http://your-domain.com/api/cards?limit=10&offset=0" \
-  -H "Authorization: Bearer YOUR_API_TOKEN"</div>
+                    <h4>Code Examples</h4>
+                    <div class="language-tabs">
+                        <button class="lang-tab active" data-lang="python-cards">Python</button>
+                        <button class="lang-tab" data-lang="js-cards">JavaScript</button>
+                        <button class="lang-tab" data-lang="php-cards">PHP</button>
+                    </div>
+                    
+                    <div class="lang-content active" id="python-cards">
+                        <div class="code-block">import requests
+
+url = "http://your-domain.com/api/cards"
+headers = {"Authorization": "Bearer YOUR_API_TOKEN"}
+params = {"limit": 10, "offset": 0}
+
+response = requests.get(url, headers=headers, params=params)
+data = response.json()
+
+if data['success']:
+    print(f"Total cards: {data['total']}")
+    for card in data['cards']:
+        print(f"ID: {card['id']}")
+        print(f"Name: {card['name']}")
+        print(f"Company: {card['company']}")
+        print(f"Email: {card['email']}")
+        print("---")</div>
+                    </div>
+                    
+                    <div class="lang-content" id="js-cards">
+                        <div class="code-block">const getCards = async (limit = 10, offset = 0) => {
+    try {
+        const response = await fetch(
+            `http://your-domain.com/api/cards?limit=${limit}&offset=${offset}`, 
+            {
+                headers: {
+                    'Authorization': 'Bearer YOUR_API_TOKEN'
+                }
+            }
+        );
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            console.log(`Total cards: ${data.total}`);
+            data.cards.forEach(card => {
+                console.log(`ID: ${card.id}`);
+                console.log(`Name: ${card.name}`);
+                console.log(`Company: ${card.company}`);
+                console.log(`Email: ${card.email}`);
+                console.log('---');
+            });
+        }
+    } catch (error) {
+        console.error('Error:', error);
+    }
+};
+
+// Usage
+getCards();</div>
+                    </div>
+                    
+                    <div class="lang-content" id="php-cards">
+                        <div class="code-block"><?php
+
+class CardAPI {
+    private $baseUrl;
+    private $token;
+    
+    public function __construct($baseUrl, $token) {
+        $this->baseUrl = $baseUrl;
+        $this->token = $token;
+    }
+    
+    public function getCards($limit = 10, $offset = 0) {
+        $url = $this->baseUrl . '/api/cards?' . http_build_query([
+            'limit' => $limit,
+            'offset' => $offset
+        ]);
+        
+        $ch = curl_init();
+        
+        curl_setopt($ch, CURLOPT_URL, $url);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, [
+            'Authorization: Bearer ' . $this->token
+        ]);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+        
+        $response = curl_exec($ch);
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        
+        curl_close($ch);
+        
+        if ($httpCode === 200) {
+            $data = json_decode($response, true);
+            
+            if ($data['success']) {
+                return $data['cards'];
+            }
+        }
+        
+        return false;
+    }
+    
+    public function displayCards($cards) {
+        foreach ($cards as $card) {
+            echo "ID: " . $card['id'] . "\n";
+            echo "Name: " . $card['name'] . "\n";
+            echo "Company: " . $card['company'] . "\n";
+            echo "Email: " . $card['email'] . "\n";
+            echo "Phone: " . $card['phone'] . "\n";
+            echo "---\n";
+        }
+    }
+}
+
+// Usage
+$api = new CardAPI('http://your-domain.com', 'YOUR_API_TOKEN');
+$cards = $api->getCards(10, 0);
+
+if ($cards) {
+    echo "Total cards found: " . count($cards) . "\n";
+    $api->displayCards($cards);
+} else {
+    echo "Failed to retrieve cards.\n";
+}
+
+?></div>
+                    </div>
                 </div>
                 
                 <div class="example-response">
@@ -634,46 +1082,364 @@ Content-Type: application/json
     </div>
 
     <!-- API Key Modal -->
-    <div id="apiKeyModal" style="display:none; position:fixed; z-index:9999; left:0; top:0; width:100vw; height:100vh; background:rgba(0,0,0,0.4);">
-        <div style="background:#fff; max-width:400px; margin:10vh auto; padding:30px 20px 20px 20px; border-radius:10px; position:relative; box-shadow:0 2px 16px #0002;">
-            <button onclick="closeApiKeyModal()" style="position:absolute; top:10px; right:15px; background:none; border:none; font-size:1.5em; color:#888; cursor:pointer;">&times;</button>
-            <h2 style="margin-top:0;">How to Get an API Key</h2>
-            <p>To generate an API key, register an account using the <b>Register</b> endpoint or the web UI. After registration, log in to receive your API token for authentication.</p>
-            <ul style="margin:10px 0 0 15px;">
-                <li>POST <code>/api/auth/register</code></li>
-                <li>POST <code>/api/auth/token</code></li>
-            </ul>
-            <p style="margin-top:10px;">Use the token in the <b>Authorization</b> header:<br><code>Authorization: Bearer YOUR_API_TOKEN</code></p>
+    <div class="modal-overlay" id="apiKeyModalOverlay" style="display: none;">
+        <div class="api-key-modal">
+            <div class="modal-header">
+                <h2><i class="fas fa-key"></i> Get API Key</h2>
+                <button class="close-modal" id="closeApiKeyModal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-content">
+                <form id="apiKeyForm">
+                    <div class="form-group">
+                        <label for="apiUsername">Username</label>
+                        <input type="text" id="apiUsername" name="username" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="apiEmail">Email</label>
+                        <input type="email" id="apiEmail" name="email" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="apiPassword">Password</label>
+                        <input type="password" id="apiPassword" name="password" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="apiUsage">Intended Usage</label>
+                        <textarea id="apiUsage" name="usage" rows="3" placeholder="Describe how you plan to use the API..."></textarea>
+                    </div>
+                    <button type="submit" class="submit-btn">
+                        <i class="fas fa-key"></i> Generate API Key
+                    </button>
+                </form>
+                <div class="api-key-result" id="apiKeyResult" style="display: none;">
+                    <h3>Your API Key</h3>
+                    <div class="key-display">
+                        <input type="text" id="generatedApiKey" readonly>
+                        <button class="copy-btn" id="copyApiKey">
+                            <i class="fas fa-copy"></i>
+                        </button>
+                    </div>
+                    <p class="key-warning">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        Save this key securely. It won't be shown again.
+                    </p>
+                </div>
+            </div>
         </div>
     </div>
+
+    <style>
+        /* Modal styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .api-key-modal {
+            background: var(--white);
+            border-radius: 12px;
+            max-width: 500px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: var(--shadow-hover);
+        }
+
+        .modal-header {
+            background: var(--text-dark);
+            color: var(--white);
+            padding: 1.5rem;
+            border-radius: 12px 12px 0 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-header h2 {
+            margin: 0;
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+
+        .close-modal {
+            background: none;
+            border: none;
+            color: var(--white);
+            font-size: 1.5rem;
+            cursor: pointer;
+            padding: 0.5rem;
+            border-radius: 50%;
+            transition: var(--transition-normal);
+        }
+
+        .close-modal:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .modal-content {
+            padding: 2rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: var(--text-dark);
+        }
+
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            padding: 0.75rem;
+            border: 2px solid var(--border-light);
+            border-radius: 8px;
+            font-family: inherit;
+            font-size: 1rem;
+            transition: var(--transition-normal);
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: var(--accent-primary);
+            box-shadow: 0 0 0 3px rgba(248, 152, 39, 0.1);
+        }
+
+        .submit-btn {
+            background: var(--accent-primary);
+            color: var(--white);
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition-normal);
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 1rem;
+        }
+
+        .submit-btn:hover {
+            background: var(--accent-secondary);
+        }
+
+        .api-key-result {
+            background: var(--secondary-bg);
+            padding: 1.5rem;
+            border-radius: 8px;
+            margin-top: 1rem;
+        }
+
+        .api-key-result h3 {
+            margin-bottom: 1rem;
+            color: var(--text-dark);
+        }
+
+        .key-display {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .key-display input {
+            flex: 1;
+            padding: 0.75rem;
+            border: 2px solid var(--border-light);
+            border-radius: 8px;
+            background: var(--white);
+            font-family: monospace;
+        }
+
+        .copy-btn {
+            background: var(--success-light);
+            color: var(--white);
+            border: none;
+            padding: 0.75rem 1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: var(--transition-normal);
+        }
+
+        .copy-btn:hover {
+            background: #047857;
+        }
+
+        .key-warning {
+            color: var(--warning-light);
+            font-size: 0.9rem;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+    </style>
 
     <script>
         function toggleSection(header) {
             const section = header.parentElement;
             section.classList.toggle('active');
         }
+        
         function generateApiKey() {
-            document.getElementById('apiKeyModal').style.display = 'block';
+            document.getElementById('apiKeyModalOverlay').style.display = 'flex';
+            document.body.style.overflow = 'hidden';
         }
+        
         function closeApiKeyModal() {
-            document.getElementById('apiKeyModal').style.display = 'none';
+            document.getElementById('apiKeyModalOverlay').style.display = 'none';
+            document.body.style.overflow = 'auto';
+            // Reset form
+            const form = document.getElementById('apiKeyForm');
+            const result = document.getElementById('apiKeyResult');
+            if (form) {
+                form.reset();
+                form.style.display = 'block';
+            }
+            if (result) result.style.display = 'none';
         }
-        function viewDocs() {
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        }
+        
         function testOcrEndpoint() {
-            alert('To test this endpoint, use a tool like Postman or cURL to POST images to /api/ocr.');
+            alert('To test this endpoint, use a tool like Postman or cURL to POST images to /api/ocr with your API key.');
         }
+        
         function testCardsEndpoint() {
             alert('To test this endpoint, send a GET request to /api/cards with your API key.');
         }
+        
         document.addEventListener('DOMContentLoaded', function() {
+            // Make first section active
             const firstSection = document.querySelector('.api-section');
             if (firstSection) {
                 firstSection.classList.add('active');
             }
-            document.getElementById('apiKeyModal').addEventListener('click', function(e) {
-                if (e.target === this) closeApiKeyModal();
+            
+            // Close modal when clicking overlay
+            const modalOverlay = document.getElementById('apiKeyModalOverlay');
+            if (modalOverlay) {
+                modalOverlay.addEventListener('click', function(e) {
+                    if (e.target === modalOverlay) {
+                        closeApiKeyModal();
+                    }
+                });
+            }
+            
+            // Close modal button
+            const closeBtn = document.getElementById('closeApiKeyModal');
+            if (closeBtn) {
+                closeBtn.addEventListener('click', closeApiKeyModal);
+            }
+            
+            // Language tab functionality
+            const langTabs = document.querySelectorAll('.lang-tab');
+            const langContents = document.querySelectorAll('.lang-content');
+            
+            langTabs.forEach(tab => {
+                tab.addEventListener('click', function() {
+                    const targetLang = this.getAttribute('data-lang');
+                    
+                    // Remove active class from all tabs and contents in the same section
+                    const section = this.closest('.api-section-content');
+                    const sectionTabs = section.querySelectorAll('.lang-tab');
+                    const sectionContents = section.querySelectorAll('.lang-content');
+                    
+                    sectionTabs.forEach(t => t.classList.remove('active'));
+                    sectionContents.forEach(c => c.classList.remove('active'));
+                    
+                    // Add active class to clicked tab and corresponding content
+                    this.classList.add('active');
+                    const targetContent = section.querySelector(`#${targetLang}`);
+                    if (targetContent) {
+                        targetContent.classList.add('active');
+                    }
+                });
+            });
+
+            // API Key form submission
+            const apiKeyForm = document.getElementById('apiKeyForm');
+            if (apiKeyForm) {
+                apiKeyForm.addEventListener('submit', async function(e) {
+                    e.preventDefault();
+                    
+                    const formData = new FormData(this);
+                    const submitBtn = this.querySelector('button[type="submit"]');
+                    const originalBtnContent = submitBtn.innerHTML;
+                    
+                    // Show loading state
+                    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generating...';
+                    submitBtn.disabled = true;
+                    
+                    try {
+                        const response = await fetch('/api/auth/register', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({
+                                username: formData.get('username'),
+                                email: formData.get('email'),
+                                password: formData.get('password'),
+                                usage: formData.get('usage')
+                            })
+                        });
+                        
+                        const data = await response.json();
+                        
+                        if (data.success) {
+                            // Show the API key
+                            document.getElementById('generatedApiKey').value = data.api_key;
+                            document.getElementById('apiKeyResult').style.display = 'block';
+                            this.style.display = 'none';
+                        } else {
+                            throw new Error(data.message || 'Failed to generate API key');
+                        }
+                    } catch (error) {
+                        console.error('Error generating API key:', error);
+                        alert('Failed to generate API key. Please try again.');
+                    } finally {
+                        // Reset button state
+                        submitBtn.innerHTML = originalBtnContent;
+                        submitBtn.disabled = false;
+                    }
+                });
+            }
+
+            // Copy API key functionality
+            const copyApiKeyBtn = document.getElementById('copyApiKey');
+            if (copyApiKeyBtn) {
+                copyApiKeyBtn.addEventListener('click', function() {
+                    const apiKeyInput = document.getElementById('generatedApiKey');
+                    apiKeyInput.select();
+                    navigator.clipboard.writeText(apiKeyInput.value).then(() => {
+                        this.innerHTML = '<i class="fas fa-check"></i>';
+                        setTimeout(() => {
+                            this.innerHTML = '<i class="fas fa-copy"></i>';
+                        }, 2000);
+                    });
+                });
+            }
+
+            // Keyboard shortcuts
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape') {
+                    const modal = document.getElementById('apiKeyModalOverlay');
+                    if (modal && modal.style.display !== 'none') {
+                        closeApiKeyModal();
+                    }
+                }
             });
         });
     </script>
