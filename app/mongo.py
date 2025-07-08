@@ -1,8 +1,10 @@
 # 1-10: Importing modules
 import os
 import time
+import logging
 from datetime import datetime
 from pymongo import MongoClient, ASCENDING
+from pymongo.errors import ConnectionFailure
 from dotenv import load_dotenv
 import base64
 import io
@@ -11,38 +13,61 @@ from PIL import Image
 # Load environment variables
 load_dotenv()
 
-# 11-20: MongoDB connection setup
+# 11-20: Production MongoDB connection with pooling
+class MongoDBConnection:
+    _instance = None
+    _client = None
+    
+    def __new__(cls):
+        if cls._instance is None:
+            cls._instance = super().__new__(cls)
+        return cls._instance
+    
+    def __init__(self):
+        if self._client is None:
+            try:
+                mongodb_uri = os.getenv('MONGODB_URI', 'mongodb://localhost:27017/')
+                self._client = MongoClient(
+                    mongodb_uri,
+                    maxPoolSize=50,  # Connection pooling
+                    wtimeout=2500,
+                    serverSelectionTimeoutMS=5000
+                )
+                # Test connection
+                self._client.admin.command('ping')
+                logging.info("Connected to MongoDB successfully")
+            except ConnectionFailure as e:
+                logging.error(f"Failed to connect to MongoDB: {e}")
+                raise
+    
+    def get_database(self):
+        db_name = os.getenv('MONGODB_DATABASE', 'visiting_card_db')
+        return self._client[db_name]
+    
+    def get_collection(self):
+        db = self.get_database()
+        collection_name = os.getenv('MONGODB_COLLECTION', 'extractions')
+        collection = db[collection_name]
+        
+        # Create indexes for better performance
+        try:
+            create_indexes(collection)
+        except Exception as e:
+            logging.warning(f"Could not create indexes: {e}")
+        
+        return collection
+
+# Production connection instance
+mongo_connection = MongoDBConnection()
+
 def get_mongo_connection():
     """
     Establish connection to MongoDB database
     Returns the collection object for direct use
     """
     try:
-        # Get MongoDB configuration from environment variables
-        mongodb_uri = os.getenv('MONGODB_URI', 'mongodb://localhost:27017/')
-        database_name = os.getenv('MONGODB_DATABASE', 'visiting_card_db')
-        collection_name = os.getenv('MONGODB_COLLECTION', 'extractions')
-        
-        # Create MongoDB client
-        client = MongoClient(mongodb_uri)
-        
-        # Test connection by pinging the server
-        client.admin.command('ping')
-        
-        # Get database and collection
-        database = client[database_name]
-        collection = database[collection_name]
-        
-        # Force database/collection creation by inserting and removing a dummy document
-        dummy_doc = {"_dummy": True}
-        result = collection.insert_one(dummy_doc)
-        collection.delete_one({"_id": result.inserted_id})
-        
-        # Create indexes for better performance
-        create_indexes(collection)
-        
-        print(f"✅ MongoDB connected: {database_name}.{collection_name}")
-        print(f"✅ Database and collection created successfully")
+        collection = mongo_connection.get_collection()
+        print(f"✅ MongoDB connected: {mongo_connection.get_database().name}.{collection.name}")
         return collection
         
     except Exception as e:

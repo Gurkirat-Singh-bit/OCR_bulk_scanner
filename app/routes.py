@@ -66,10 +66,13 @@ def upload_files():
         if file and file.filename != '':
             print(f"\n📄 Processing file {idx + 1}/{total_files}: {file.filename}")
             
-            # Check file format before processing
-            if not allowed_file(file.filename):
-                print(f"❌ Unsupported format: {file.filename}")
-                skipped_files.append(file.filename)
+            # Use enhanced validation for production
+            from app.utils import validate_image_file
+            
+            is_valid, error_message = validate_image_file(file)
+            if not is_valid:
+                print(f"❌ {error_message}: {file.filename}")
+                skipped_files.append(f"{file.filename} ({error_message})")
                 continue
             
             try:
@@ -873,3 +876,60 @@ def api_docs():
     API Documentation page - shows all available endpoints and their usage
     """
     return render_template('api_docs.html')
+
+@main_bp.route('/health')
+def health_check():
+    """
+    Health check endpoint for production monitoring
+    """
+    try:
+        from app.mongo import mongo_connection
+        from datetime import datetime
+        
+        # Test MongoDB connection
+        collection = mongo_connection.get_collection()
+        collection.find_one()
+        
+        return jsonify({
+            'status': 'healthy',
+            'timestamp': datetime.utcnow().isoformat(),
+            'services': {
+                'database': 'connected',
+                'api': 'operational'
+            }
+        }), 200
+    except Exception as e:
+        return jsonify({
+            'status': 'unhealthy',
+            'error': str(e),
+            'timestamp': datetime.utcnow().isoformat()
+        }), 503
+
+@main_bp.route('/metrics')
+def metrics():
+    """
+    System metrics endpoint for monitoring
+    """
+    try:
+        import psutil
+        from datetime import datetime
+        
+        return jsonify({
+            'system': {
+                'cpu_percent': psutil.cpu_percent(),
+                'memory_percent': psutil.virtual_memory().percent,
+                'disk_usage': psutil.disk_usage('/').percent
+            },
+            'application': {
+                'timestamp': datetime.utcnow().isoformat(),
+                'status': 'running'
+            }
+        })
+    except ImportError:
+        return jsonify({
+            'error': 'psutil not installed - metrics unavailable'
+        }), 503
+    except Exception as e:
+        return jsonify({
+            'error': str(e)
+        }), 500

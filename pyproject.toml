@@ -13,4 +13,12 @@ dependencies = [
     "requests>=2.32.4",
     "pymongo>=4.13.2",
     "pycountry>=24.6.1",
+    "psutil>=5.9.0",  # For system monitoring
+]
+
+[project.optional-dependencies]
+production = [
+    "gunicorn>=21.2.0",  # WSGI server for production
+    "redis>=5.0.0",      # For caching
+    "flask-caching>=2.1.0",  # Caching extension
 ]

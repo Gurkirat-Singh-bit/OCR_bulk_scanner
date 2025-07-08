@@ -59,19 +59,11 @@ document.addEventListener('DOMContentLoaded', function() {
 
         // API button events
         const apiDocsBtn = document.getElementById('apiDocsBtn');
-        const getApiKeyBtn = document.getElementById('getApiKeyBtn');
         const viewDocsBtn = document.getElementById('viewDocsBtn');
         
         if (apiDocsBtn) {
             apiDocsBtn.addEventListener('click', function() {
                 console.log('API docs button clicked');
-                // This will be handled by api.js
-            });
-        }
-        
-        if (getApiKeyBtn) {
-            getApiKeyBtn.addEventListener('click', function() {
-                console.log('Get API key button clicked');
                 // This will be handled by api.js
             });
         }

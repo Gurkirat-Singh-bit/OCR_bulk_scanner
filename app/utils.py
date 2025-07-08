@@ -468,3 +468,29 @@ def _add_contact_analysis_sheet(worksheet, data_list):
         if i == 3:  # Header row
             for col in ['A', 'B', 'C']:
                 worksheet[f'{col}{i}'].font = Font(bold=True)
+
+# Production security validation functions
+MAX_FILE_SIZE = 16 * 1024 * 1024  # 16MB
+
+def validate_file_size(file):
+    """Validate file size to prevent oversized uploads"""
+    if hasattr(file, 'content_length') and file.content_length:
+        return file.content_length <= MAX_FILE_SIZE
+    return True
+
+def sanitize_filename(filename):
+    """Additional filename sanitization for production"""
+    return secure_filename(filename)
+
+def validate_image_file(file):
+    """Enhanced file validation for production"""
+    if not file:
+        return False, "No file provided"
+    
+    if not allowed_file(file.filename):
+        return False, "File type not allowed. Only PNG, JPG, JPEG, and WEBP files are supported."
+    
+    if not validate_file_size(file):
+        return False, f"File size too large. Maximum size is {MAX_FILE_SIZE // (1024*1024)}MB."
+    
+    return True, "File is valid"
