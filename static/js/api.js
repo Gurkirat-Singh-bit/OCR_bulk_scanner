@@ -1,3 +1,25 @@
+// Global functions to be accessible from onclick handlers
+window.openApiKeyModal = function() {
+    const apiKeyModalOverlay = document.getElementById('apiKeyModalOverlay');
+    if (apiKeyModalOverlay) {
+        apiKeyModalOverlay.classList.add('active');
+        document.body.style.overflow = 'hidden';
+    }
+};
+
+window.closeApiKeyModal = function() {
+    const apiKeyModalOverlay = document.getElementById('apiKeyModalOverlay');
+    if (apiKeyModalOverlay) {
+        apiKeyModalOverlay.classList.remove('active');
+        document.body.style.overflow = 'auto';
+        // Reset form
+        const apiKeyForm = document.getElementById('apiKeyForm');
+        const apiKeyResult = document.getElementById('apiKeyResult');
+        if (apiKeyForm) apiKeyForm.reset();
+        if (apiKeyResult) apiKeyResult.style.display = 'none';
+    }
+};
+
 // API Modal Management
 document.addEventListener('DOMContentLoaded', function() {
     // Get elements

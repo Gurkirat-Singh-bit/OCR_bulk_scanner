@@ -43,10 +43,10 @@
                     </a>
                 </div>
                 <div class="nav-actions">
-                    <button class="nav-action-btn" id="createLabelBtn">
+                    <button class="nav-action-btn" onclick="openCreateLabelModal()">
                         <i class="fas fa-plus"></i> New Label
                     </button>
-                    <button class="nav-action-btn" id="exportBtn">
+                    <button class="nav-action-btn" onclick="window.location.href='/download'">
                         <i class="fas fa-download"></i> Export Data
                     </button>
                 </div>
@@ -180,7 +180,7 @@
                             <div class="label-group" data-label-id="{{ label.id }}">
                                 <div class="label-header" data-label-id="{{ label.id }}">
                                     <div class="label-info">
-                                        <div class="label-color" style="background-color: {{ label.color }}"></div>
+                                        <div class="label-color" data-color="{{ label.color }}"></div>
                                         <h3>{{ label.name }}</h3>
                                         <span class="label-count">({{ label_cards|length }})</span>
                                     </div>
@@ -513,7 +513,7 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h3><i class="fas fa-tag"></i> Create New Label</h3>
-                <button class="modal-close" data-modal="createLabelModal">
+                <button class="modal-close" onclick="document.getElementById('createLabelModal').style.display='none'">
                     <i class="fas fa-times"></i>
                 </button>
             </div>
@@ -538,8 +538,20 @@
                         </div>
                     </div>
                     <div class="form-actions">
-                        <button type="button" class="cancel-btn" data-modal="createLabelModal">Cancel</button>
-                        <button type="submit" class="submit-btn">
+                        <button type="button" class="cancel-btn" onclick="document.getElementById('createLabelModal').style.display='none'">Cancel</button>
+                        <button type="button" class="submit-btn" onclick="
+                            var name = document.getElementById('labelName').value.trim();
+                            var color = document.getElementById('labelColor').value;
+                            if (!name) { alert('Please enter a label name'); return; }
+                            fetch('/api/labels', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ name: name, color: color })
+                            }).then(r => r.json()).then(d => {
+                                if (d.success) { alert('Label created!'); document.getElementById('createLabelModal').style.display='none'; location.reload(); }
+                                else { alert('Error: ' + (d.message || 'Failed')); }
+                            }).catch(e => alert('Error: ' + e));
+                        ">
                             <i class="fas fa-plus"></i> Create Label
                         </button>
                     </div>
@@ -677,6 +689,159 @@
     </div>
 
     <!-- Custom JavaScript for manage interface -->
-    <script src="{{ url_for('static', filename='js/manage.js') }}?v=20250629_v2"></script>
+    <script src="{{ url_for('static', filename='js/manage.js') }}?v=20250708_fixed"></script>
+    
+    <!-- Emergency button fix script -->
+    <script>
+    console.log('🚨 Emergency script starting...');
+    
+    // Define functions FIRST before anything else
+    window.openCreateLabelModal = function() {
+        console.log('🔍 Opening create label modal...');
+        try {
+            const modal = document.getElementById('createLabelModal');
+            console.log('🔍 Modal element:', modal);
+            if (modal) {
+                modal.style.display = 'flex';
+                modal.style.border = '3px solid red'; // debug border
+                setTimeout(() => { modal.style.border = ''; }, 2000);
+                if (getComputedStyle(modal).display === 'none') {
+                    modal.style.display = 'block';
+                }
+                console.log('✅ Modal opened successfully (forced display)');
+            } else {
+                console.error('❌ Modal not found: createLabelModal');
+                alert('Error: Modal not found');
+            }
+        } catch (error) {
+            console.error('❌ Error opening modal:', error);
+            alert('Error opening modal: ' + error.message);
+        }
+    };
+    
+    window.downloadData = function() {
+        console.log('🔍 Downloading data...');
+        try {
+            window.location.href = '/download';
+            console.log('✅ Download initiated');
+        } catch (error) {
+            console.error('❌ Error downloading:', error);
+            alert('Error downloading: ' + error.message);
+        }
+    };
+    
+    window.closeModal = function(modalId) {
+        const modal = document.getElementById(modalId);
+        if (modal) {
+            modal.style.display = 'none';
+        }
+    };
+    
+    window.submitCreateLabel = function() {
+        const nameInput = document.getElementById('labelName');
+        const colorInput = document.getElementById('labelColor');
+        
+        const name = nameInput.value.trim();
+        const color = colorInput.value;
+        
+        if (!name) {
+            alert('Please enter a label name');
+            return;
+        }
+        
+        console.log('Creating label:', { name, color });
+        
+        fetch('/api/labels', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ name: name, color: color })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('Label created successfully!');
+                window.closeModal('createLabelModal');
+                location.reload();
+            } else {
+                alert('Error: ' + (data.message || 'Failed to create label'));
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error creating label');
+        });
+    }
+    
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log('🆘 Emergency button fix script loaded');
+        // Setup modal close buttons
+        const closeButtons = document.querySelectorAll('.modal-close, [data-modal]');
+        closeButtons.forEach(function(btn) {
+            btn.onclick = function(e) {
+                e.preventDefault();
+                const modalId = this.getAttribute('data-modal');
+                if (modalId) {
+                    window.closeModal(modalId);
+                }
+            };
+        });
+        // Setup form submission
+        const form = document.getElementById('createLabelForm');
+        if (form) {
+            form.onsubmit = function(e) {
+                e.preventDefault();
+                window.submitCreateLabel();
+            };
+        }
+        // Color picker handlers
+        const colorPresets = document.querySelectorAll('.color-preset');
+        const colorInput = document.getElementById('labelColor');
+        colorPresets.forEach(function(preset) {
+            preset.onclick = function() {
+                const color = this.getAttribute('data-color');
+                if (colorInput) {
+                    colorInput.value = color;
+                }
+                colorPresets.forEach(function(p) {
+                    p.classList.remove('active');
+                });
+                this.classList.add('active');
+            };
+        });
+        // Fix label colors to avoid CSS validation errors
+        const labelColors = document.querySelectorAll('.label-color[data-color]');
+        labelColors.forEach(function(element) {
+            const color = element.getAttribute('data-color');
+            if (color) {
+                element.style.backgroundColor = color;
+            }
+        });
+        // Patch openCreateLabelModal to be more robust
+        window.openCreateLabelModal = function() {
+            console.log('🔍 Opening create label modal...');
+            const modal = document.getElementById('createLabelModal');
+            if (modal) {
+                modal.style.display = 'flex';
+                modal.style.border = '3px solid red'; // debug border
+                setTimeout(() => { modal.style.border = ''; }, 2000);
+                if (getComputedStyle(modal).display === 'none') {
+                    modal.style.display = 'block';
+                }
+                console.log('✅ Modal opened successfully (forced display)');
+            } else {
+                console.error('❌ Modal not found: createLabelModal');
+                alert('Error: Modal not found');
+            }
+        };
+    });
+    // Close modal on overlay click
+    document.addEventListener('click', function(e) {
+        if (e.target.classList.contains('modal-overlay')) {
+            e.target.style.display = 'none';
+        }
+    });
+</script>
 </body>
 </html>

@@ -423,7 +423,14 @@ function setupEventListeners() {
     // Export button
     const exportBtn = document.getElementById('exportBtn');
     if (exportBtn) {
-        exportBtn.addEventListener('click', handleExport);
+        exportBtn.addEventListener('click', function(e) {
+            console.log('📤 Export Button clicked!', e);
+            e.preventDefault();
+            handleExport();
+        });
+        console.log('✅ Export button listener added');
+    } else {
+        console.error('❌ Export button not found!');
     }
 }
 

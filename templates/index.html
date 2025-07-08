@@ -161,49 +161,6 @@
                     </div>
                 </section>
 
-                <!-- API Section -->
-                <section class="api-section card-light">
-                    <div class="section-header">
-                        <h2><i class="fas fa-code"></i> API Access</h2>
-                    </div>
-                    <div class="api-content">
-                        <div class="api-endpoints">
-                            <div class="api-endpoint" data-endpoint="ocr">
-                                <div class="endpoint-header">
-                                    <span class="method post">POST</span>
-                                    <span class="path">/api/ocr</span>
-                                    <i class="fas fa-chevron-down toggle-icon"></i>
-                                </div>
-                                <p class="endpoint-desc">Extract text from business card images</p>
-                            </div>
-                            <div class="api-endpoint" data-endpoint="cards">
-                                <div class="endpoint-header">
-                                    <span class="method get">GET</span>
-                                    <span class="path">/api/cards</span>
-                                    <i class="fas fa-chevron-down toggle-icon"></i>
-                                </div>
-                                <p class="endpoint-desc">Get all extracted card data</p>
-                            </div>
-                            <div class="api-endpoint" data-endpoint="token">
-                                <div class="endpoint-header">
-                                    <span class="method post">POST</span>
-                                    <span class="path">/api/auth/token</span>
-                                    <i class="fas fa-chevron-down toggle-icon"></i>
-                                </div>
-                                <p class="endpoint-desc">Generate API access token</p>
-                            </div>
-                        </div>
-                        <div class="api-actions">
-                            <button class="api-btn" id="getApiKeyBtn">
-                                <i class="fas fa-key"></i> Get API Key
-                            </button>
-                            <button class="api-btn secondary" id="viewDocsBtn">
-                                <i class="fas fa-book"></i> View Docs
-                            </button>
-                        </div>
-                    </div>
-                </section>
-
                 <!-- Previous results section (bottom-left) -->
                 <section class="results-section card-light">
                     <div class="section-header">
@@ -270,30 +227,45 @@
                     </div>
                 </section>
 
-                <!-- Footer/Development section (bottom-right) -->
-                <section class="portfolio-section card-light">
-                    <div class="portfolio-content">
-                        <div class="logo-section">
-                            <div class="logo-placeholder">
-                                <i class="fas fa-code"></i>
-                                <span>OCR Scanner API</span>
+                <!-- API Section moved to bottom-right -->
+                <section class="api-section card-light">
+                    <div class="section-header">
+                        <h2><i class="fas fa-code"></i> API Access</h2>
+                    </div>
+                    <div class="api-content">
+                        <div class="api-endpoints">
+                            <div class="api-endpoint" data-endpoint="ocr">
+                                <div class="endpoint-header">
+                                    <span class="method post">POST</span>
+                                    <span class="path">/api/ocr</span>
+                                    <i class="fas fa-chevron-down toggle-icon"></i>
+                                </div>
+                                <p class="endpoint-desc">Extract text from business card images</p>
+                            </div>
+                            <div class="api-endpoint" data-endpoint="cards">
+                                <div class="endpoint-header">
+                                    <span class="method get">GET</span>
+                                    <span class="path">/api/cards</span>
+                                    <i class="fas fa-chevron-down toggle-icon"></i>
+                                </div>
+                                <p class="endpoint-desc">Get all extracted card data</p>
+                            </div>
+                            <div class="api-endpoint" data-endpoint="token">
+                                <div class="endpoint-header">
+                                    <span class="method post">POST</span>
+                                    <span class="path">/api/auth/token</span>
+                                    <i class="fas fa-chevron-down toggle-icon"></i>
+                                </div>
+                                <p class="endpoint-desc">Generate API access token</p>
                             </div>
                         </div>
-                        <div class="portfolio-info">
-                            <h3>Developer Tools</h3>
-                            <p>RESTful API for business card OCR integration</p>
-                            <p class="tech-stack">Flask • Tesseract • MongoDB • JWT Auth</p>
-                        </div>
-                        <div class="portfolio-actions">
-                            <button class="portfolio-btn" id="apiDocsBtn">
-                                <i class="fas fa-file-code"></i> API Documentation
+                        <div class="api-actions">
+                            <button class="api-btn" id="getApiKeyBtn" onclick="openApiKeyModal()">
+                                <i class="fas fa-key"></i> Get API Key
                             </button>
-                            <a href="https://github.com" target="_blank" class="social-btn">
-                                <i class="fab fa-github"></i>
-                            </a>
-                            <a href="https://docs.python.org" target="_blank" class="social-btn">
-                                <i class="fab fa-python"></i>
-                            </a>
+                            <button class="api-btn secondary" id="viewDocsBtn" onclick="window.location.href='/api_docs'">
+                                <i class="fas fa-book"></i> View Docs
+                            </button>
                         </div>
                     </div>
                 </section>
